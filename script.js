@@ -20,7 +20,7 @@ async function analyzeProfile() {
 
     // Send to Clay webhook #1
     try {
-        await fetch('YOUR_CLAY_WEBHOOK_URL', {
+        await fetch('https://api.clay.com/v3/sources/webhook/pull-in-data-from-a-webhook-79994b2d-1b6d-48f3-961c-cd1666cdd6db', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
