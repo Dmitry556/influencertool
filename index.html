@@ -236,6 +236,7 @@
             font-size: 14px;
             padding: 8px 16px;
             margin-top: 10px;
+            transition: background 0.3s;
         }
 
         .copy-btn:hover {
@@ -414,7 +415,7 @@
                         <h3>Generated Email</h3>
                         <div class="email-section">
                             <div class="email-content">${data.outreach_email}</div>
-                            <button class="copy-btn" onclick="copyEmail()">Copy Email</button>
+                            <button class="copy-btn" onclick="copyEmail(event)">Copy Email</button>
                         </div>
                     </div>
                     ` : ''}
@@ -430,7 +431,8 @@
                 </div>
             `;
             
-            // Store data for later use
+            
+            // Store all data for later use
             analysisData = data;
             
             showStatus('Analysis complete!', 'success');
@@ -443,21 +445,67 @@
             return num.toString();
         }
 
-        function copyEmail() {
+        function copyEmail(event) {
             if (analysisData.outreach_email) {
                 navigator.clipboard.writeText(analysisData.outreach_email);
-                showStatus('Email copied to clipboard!', 'success');
+                const btn = event.target;
+                const originalText = btn.textContent;
+                btn.textContent = 'Copied!';
+                btn.style.background = '#28a745';
+                
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.style.background = '#6c757d';
+                }, 2000);
             }
         }
 
-        function approveInfluencer(username) {
-            showStatus(`Approved ${username} - Sending to Instantly.ai...`, 'success');
-            // TODO: Send approval to Clay webhook for Instantly.ai integration
+        async function approveInfluencer(username) {
+            showStatus(`Approving ${username}...`, 'loading');
+            
+            try {
+                await fetch('/api/approve', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: analysisData.username,
+                        full_name: analysisData.full_name,
+                        email: analysisData.email_found || 'no_email',
+                        follower_count: analysisData.follower_count,
+                        following_count: analysisData.following_count,
+                        posts_count: analysisData.posts_count,
+                        biography: analysisData.biography,
+                        profile_pic_url: analysisData.profile_pic_url,
+                        is_verified: analysisData.is_verified,
+                        outreach_email: analysisData.outreach_email,
+                        instagram_url: document.getElementById('instagramUrl').value,
+                        approved_at: new Date().toISOString(),
+                        approved_by: 'Xixi'
+                    })
+                });
+                
+                showStatus(`✅ ${username} approved and sent to campaign!`, 'success');
+                
+                // Clear the form after approval
+                setTimeout(() => {
+                    document.getElementById('results').innerHTML = '';
+                    document.getElementById('instagramUrl').value = '';
+                }, 3000);
+                
+            } catch (error) {
+                showStatus('Error sending approval', 'error');
+            }
         }
 
         function rejectInfluencer(username) {
             showStatus(`Rejected ${username}`, 'error');
-            // TODO: Send rejection to Clay for logging
+            // Optionally clear the form
+            setTimeout(() => {
+                document.getElementById('results').innerHTML = '';
+                document.getElementById('instagramUrl').value = '';
+            }, 2000);
         }
     </script>
 </body>
