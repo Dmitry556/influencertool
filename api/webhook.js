@@ -25,4 +25,6 @@ export default function handler(req, res) {
         
         return res.status(202).json({ status: 'pending' });
     }
+    
+    return res.status(405).json({ error: 'Method not allowed' });
 }
