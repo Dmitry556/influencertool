@@ -1,23 +1,28 @@
+// Store results in memory (resets when server restarts)
+const results = new Map();
+
 export default function handler(req, res) {
-    if (req.method !== 'POST') {
-        return res.status(405).json({ error: 'Method not allowed' });
+    if (req.method === 'POST') {
+        // Receive data from Clay
+        const { analysis_id, ...data } = req.body;
+        results.set(analysis_id, data);
+        
+        // Clean up after 5 minutes
+        setTimeout(() => results.delete(analysis_id), 300000);
+        
+        return res.status(200).json({ received: true });
     }
-
-    const data = req.body;
-
-    // Send data to frontend via Server-Sent Events or WebSocket
-    // For now, we'll use a simple approach
     
-    // Store in a temporary place (in production, use a database)
-    // For this simple version, we'll return HTML that posts a message
-    
-    res.status(200).send(`
-        <script>
-            window.opener.postMessage({
-                type: 'analysis-complete',
-                data: ${JSON.stringify(data)}
-            }, '*');
-            window.close();
-        </script>
-    `);
+    if (req.method === 'GET') {
+        // Frontend polls for results
+        const { id } = req.query;
+        const data = results.get(id);
+        
+        if (data) {
+            results.delete(id);
+            return res.status(200).json(data);
+        }
+        
+        return res.status(202).json({ status: 'pending' });
+    }
 }
