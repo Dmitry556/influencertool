@@ -14,9 +14,6 @@ async function analyzeProfile() {
 
     // Generate unique ID for this analysis
     const analysisId = Date.now().toString();
-    
-    // Store in memory (in production, you might want localStorage)
-    window.pendingAnalysis = analysisId;
 
     // Send to Clay webhook #1
     try {
@@ -33,9 +30,35 @@ async function analyzeProfile() {
         });
         
         showStatus('Processing... This may take 30 seconds', 'loading');
+        
+        // Start polling for results
+        pollForResults(analysisId);
+        
     } catch (error) {
         showStatus('Error sending request', 'error');
     }
+}
+
+async function pollForResults(analysisId) {
+    const pollInterval = setInterval(async () => {
+        try {
+            const response = await fetch(`/api/webhook?id=${analysisId}`);
+            const data = await response.json();
+            
+            if (response.status === 200 && data.username) {
+                clearInterval(pollInterval);
+                displayResults(data);
+            }
+        } catch (error) {
+            console.error('Polling error:', error);
+        }
+    }, 2000); // Poll every 2 seconds
+    
+    // Stop after 60 seconds
+    setTimeout(() => {
+        clearInterval(pollInterval);
+        showStatus('Analysis timed out. Please try again.', 'error');
+    }, 60000);
 }
 
 function showStatus(message, type) {
@@ -133,10 +156,3 @@ function approveInfluencer(username) {
 function rejectInfluencer(username) {
     alert(`Rejected ${username}`);
 }
-
-// Listen for webhook data
-window.addEventListener('message', (event) => {
-    if (event.data && event.data.type === 'analysis-complete') {
-        displayResults(event.data.data);
-    }
-});
