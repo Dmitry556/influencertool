@@ -501,32 +501,56 @@
             processedData = [];
 
             // Process in batches to avoid overwhelming the server
-            const batchSize = 5;
+            const batchSize = 3;
             const results = [];
+            let successCount = 0;
+            let errorCount = 0;
 
             for (let i = 0; i < urls.length; i += batchSize) {
                 const batch = urls.slice(i, i + batchSize);
                 const batchResults = await processBatch(batch, i);
+                
+                // Count successes and errors
+                batchResults.forEach(result => {
+                    if (result.error) {
+                        errorCount++;
+                    } else {
+                        successCount++;
+                    }
+                });
+                
                 results.push(...batchResults);
                 
-                // Update loading text
+                // Update loading text with success/error count
                 document.getElementById('loadingSubtext').textContent = 
-                    `Processed ${results.length} of ${urls.length} influencers`;
+                    `Processed ${results.length} of ${urls.length} (${successCount} successful, ${errorCount} errors)`;
             }
 
             processedData = results;
-            displayResults(results);
+            
+            // Always display results, even if some failed
+            if (results.length > 0) {
+                displayResults(results);
+            }
+            
             showLoading(false);
         }
 
         // Process a batch of URLs
         async function processBatch(urls, startIndex) {
-            const promises = urls.map(async (url, index) => {
-                const analysisId = Date.now().toString() + '_' + (startIndex + index);
+            const results = [];
+            
+            // Process sequentially with small delay to avoid overwhelming server
+            for (let i = 0; i < urls.length; i++) {
+                const url = urls[i];
+                // Use timestamp + random number to ensure unique IDs
+                const analysisId = Date.now().toString() + '_' + Math.random().toString(36).substr(2, 9);
                 
                 try {
+                    console.log(`Processing ${url} with ID ${analysisId}`);
+                    
                     // Send to Clay
-                    await fetch('/api/analyze', {
+                    const response = await fetch('/api/analyze', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -538,42 +562,91 @@
                         })
                     });
 
+                    if (!response.ok) {
+                        throw new Error('Failed to send to Clay');
+                    }
+
                     // Poll for results
                     const result = await pollForResult(analysisId);
-                    return { ...result, original_url: url };
+                    results.push({ ...result, original_url: url, success: true });
+                    
                 } catch (error) {
                     console.error(`Error processing ${url}:`, error);
-                    return {
+                    
+                    // Extract username from URL if possible
+                    const usernameMatch = url.match(/instagram\.com\/([^\/\?]+)/);
+                    const username = usernameMatch ? usernameMatch[1] : 'Unknown';
+                    
+                    results.push({
                         original_url: url,
                         error: true,
-                        username: 'Error',
-                        full_name: 'Failed to process'
-                    };
+                        username: username,
+                        full_name: 'Failed to process',
+                        error_message: error.message || 'Processing failed',
+                        follower_count: 0
+                    });
                 }
-            });
+                
+                // Small delay between requests
+                if (i < urls.length - 1) {
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                }
+            }
+            
+            return results;
+        }
 
-            return Promise.all(promises);
+        // Retry a single influencer
+        async function retryInfluencer(url, index) {
+            const btn = event.target;
+            btn.textContent = 'Retrying...';
+            btn.disabled = true;
+
+            try {
+                const result = await processBatch([url], 0);
+                if (result[0] && !result[0].error) {
+                    // Update the processedData
+                    processedData[index] = result[0];
+                    // Re-render the entire table
+                    displayResults(processedData);
+                } else {
+                    btn.textContent = 'Retry';
+                    btn.disabled = false;
+                    alert('Retry failed. Please check the URL and try again.');
+                }
+            } catch (error) {
+                btn.textContent = 'Retry';
+                btn.disabled = false;
+                alert('Retry failed. Please check the URL and try again.');
+            }
         }
 
         // Poll for individual result
         async function pollForResult(analysisId) {
-            const maxAttempts = 30;
+            const maxAttempts = 35; // Increased for slower processing
             
             for (let i = 0; i < maxAttempts; i++) {
                 try {
                     const response = await fetch(`/api/webhook?id=${analysisId}`);
-                    const data = await response.json();
                     
-                    if (response.status === 200 && data.username) {
-                        return data;
+                    if (response.status === 200) {
+                        const data = await response.json();
+                        
+                        // Check if we actually have data with username
+                        if (data && data.username) {
+                            console.log(`Success for ${analysisId}:`, data.username);
+                            return data;
+                        }
                     }
                 } catch (error) {
-                    console.error('Polling error:', error);
+                    console.error(`Polling error for ${analysisId}:`, error);
                 }
                 
+                // Wait 2 seconds between polls
                 await new Promise(resolve => setTimeout(resolve, 2000));
             }
             
+            console.error(`Timeout for ${analysisId}`);
             throw new Error('Timeout waiting for results');
         }
 
@@ -606,9 +679,23 @@
             results.forEach((data, index) => {
                 if (data.error) {
                     tableHTML += `
-                        <tr>
-                            <td colspan="3" style="text-align: center; color: #dc3545;">
-                                Failed to process: ${data.original_url}
+                        <tr style="background-color: #fff5f5;">
+                            <td>
+                                <div class="profile-cell">
+                                    <div class="profile-pic-small" style="background: #dc3545; color: white; display: flex; align-items: center; justify-content: center; font-size: 20px;">!</div>
+                                    <div class="profile-info-small">
+                                        <div class="username-small" style="color: #dc3545;">@${data.username}</div>
+                                        <div class="followers-small">Error: ${data.error_message || 'Failed to process'}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td style="color: #999;">
+                                <em>No email generated - ${data.error_message || 'Processing failed'}</em>
+                            </td>
+                            <td>
+                                <button class="btn-small btn-reject-small" onclick="retryInfluencer('${data.original_url}', ${index})">
+                                    Retry
+                                </button>
                             </td>
                         </tr>
                     `;
@@ -628,7 +715,10 @@
                                     '<div class="profile-pic-small" style="background: #ddd;"></div>'
                                 }
                                 <div class="profile-info-small">
-                                    <div class="username-small">@${data.username}</div>
+                                    <div class="username-small">
+                                        @${data.username}
+                                        ${data.is_verified ? '<span style="color: #007bff; margin-left: 4px;">✓</span>' : ''}
+                                    </div>
                                     <div class="followers-small">${formatNumber(data.follower_count)} followers</div>
                                 </div>
                             </div>
