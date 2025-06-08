@@ -431,6 +431,7 @@
     <script>
         let processedData = [];
         let urlInputs = [];
+        let resultsMap = new Map(); // Store results by index
 
         // Initialize URL inputs
         function initializeInputs() {
@@ -488,8 +489,8 @@
         // Generate emails for all URLs
         async function generateEmails() {
             const urls = urlInputs
-                .map(input => input.value.trim())
-                .filter(url => url);
+                .map((input, index) => ({ url: input.value.trim(), index }))
+                .filter(item => item.url);
 
             if (urls.length === 0) {
                 alert('Please enter at least one Instagram URL');
@@ -497,103 +498,241 @@
             }
 
             showLoading(true);
-            document.getElementById('resultsSection').style.display = 'none';
-            processedData = [];
-
-            // Process in batches to avoid overwhelming the server
-            const batchSize = 3;
-            const results = [];
+            
+            // Initialize results display immediately
+            document.getElementById('resultsSection').style.display = 'block';
+            processedData = new Array(urls.length);
+            resultsMap.clear();
+            
+            // Create initial table with loading states
+            initializeResultsTable(urls);
+            
+            let completedCount = 0;
             let successCount = 0;
             let errorCount = 0;
 
-            for (let i = 0; i < urls.length; i += batchSize) {
-                const batch = urls.slice(i, i + batchSize);
-                const batchResults = await processBatch(batch, i);
-                
-                // Count successes and errors
-                batchResults.forEach(result => {
+            // Process URLs individually
+            for (const { url, index } of urls) {
+                processInfluencer(url, index).then(result => {
+                    completedCount++;
+                    
                     if (result.error) {
                         errorCount++;
                     } else {
                         successCount++;
                     }
+                    
+                    // Update loading text
+                    document.getElementById('loadingSubtext').textContent = 
+                        `Completed ${completedCount} of ${urls.length} (${successCount} successful, ${errorCount} errors)`;
+                    
+                    // Store result
+                    processedData[index] = result;
+                    resultsMap.set(index, result);
+                    
+                    // Update individual row
+                    updateResultRow(index, result);
+                    
+                    // Hide loading when all complete
+                    if (completedCount === urls.length) {
+                        showLoading(false);
+                    }
                 });
                 
-                results.push(...batchResults);
-                
-                // Update loading text with success/error count
-                document.getElementById('loadingSubtext').textContent = 
-                    `Processed ${results.length} of ${urls.length} (${successCount} successful, ${errorCount} errors)`;
+                // Small delay between starting each request
+                await new Promise(resolve => setTimeout(resolve, 200));
             }
-
-            processedData = results;
-            
-            // Always display results, even if some failed
-            if (results.length > 0) {
-                displayResults(results);
-            }
-            
-            showLoading(false);
         }
 
-        // Process a batch of URLs
-        async function processBatch(urls, startIndex) {
-            const results = [];
+        // Process a single influencer
+        async function processInfluencer(url, index) {
+            const analysisId = Date.now().toString() + '_' + Math.random().toString(36).substr(2, 9);
             
-            // Process sequentially with small delay to avoid overwhelming server
-            for (let i = 0; i < urls.length; i++) {
-                const url = urls[i];
-                // Use timestamp + random number to ensure unique IDs
-                const analysisId = Date.now().toString() + '_' + Math.random().toString(36).substr(2, 9);
+            try {
+                console.log(`Processing ${url} with ID ${analysisId}`);
                 
-                try {
-                    console.log(`Processing ${url} with ID ${analysisId}`);
-                    
-                    // Send to Clay
-                    const response = await fetch('/api/analyze', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            instagram_url: url,
-                            callback_url: `${window.location.origin}/api/webhook`,
-                            analysis_id: analysisId
-                        })
-                    });
+                // Send to Clay
+                const response = await fetch('/api/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        instagram_url: url,
+                        callback_url: `${window.location.origin}/api/webhook`,
+                        analysis_id: analysisId
+                    })
+                });
 
-                    if (!response.ok) {
-                        throw new Error('Failed to send to Clay');
-                    }
-
-                    // Poll for results
-                    const result = await pollForResult(analysisId);
-                    results.push({ ...result, original_url: url, success: true });
-                    
-                } catch (error) {
-                    console.error(`Error processing ${url}:`, error);
-                    
-                    // Extract username from URL if possible
-                    const usernameMatch = url.match(/instagram\.com\/([^\/\?]+)/);
-                    const username = usernameMatch ? usernameMatch[1] : 'Unknown';
-                    
-                    results.push({
-                        original_url: url,
-                        error: true,
-                        username: username,
-                        full_name: 'Failed to process',
-                        error_message: error.message || 'Processing failed',
-                        follower_count: 0
-                    });
+                if (!response.ok) {
+                    throw new Error('Failed to send to Clay');
                 }
+
+                // Poll for results
+                const result = await pollForResult(analysisId);
+                return { ...result, original_url: url, success: true };
                 
-                // Small delay between requests
-                if (i < urls.length - 1) {
-                    await new Promise(resolve => setTimeout(resolve, 500));
-                }
+            } catch (error) {
+                console.error(`Error processing ${url}:`, error);
+                
+                // Extract username from URL if possible
+                const usernameMatch = url.match(/instagram\.com\/([^\/\?]+)/);
+                const username = usernameMatch ? usernameMatch[1] : 'Unknown';
+                
+                return {
+                    original_url: url,
+                    error: true,
+                    username: username,
+                    full_name: 'Failed to process',
+                    error_message: error.message || 'Processing failed',
+                    follower_count: 0
+                };
             }
+        }
+
+        // Initialize results table with loading states
+        function initializeResultsTable(urls) {
+            const resultsContent = document.getElementById('resultsContent');
             
-            return results;
+            let tableHTML = `
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th width="30%">Profile</th>
+                            <th width="50%">Generated Email</th>
+                            <th width="20%">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            urls.forEach(({ url, index }) => {
+                const usernameMatch = url.match(/instagram\.com\/([^\/\?]+)/);
+                const username = usernameMatch ? usernameMatch[1] : 'Loading...';
+                
+                tableHTML += `
+                    <tr id="row-${index}" class="loading-row">
+                        <td>
+                            <div class="profile-cell">
+                                <div class="profile-pic-small loading-skeleton"></div>
+                                <div class="profile-info-small">
+                                    <div class="username-small">@${username}</div>
+                                    <div class="followers-small">Loading...</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="loading-text-skeleton"></div>
+                        </td>
+                        <td>
+                            <div class="spinner-small"></div>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            tableHTML += `
+                    </tbody>
+                </table>
+            `;
+
+            resultsContent.innerHTML = tableHTML;
+        }
+
+        // Update individual result row
+        function updateResultRow(index, data) {
+            const row = document.getElementById(`row-${index}`);
+            if (!row) return;
+
+            if (data.error) {
+                row.className = 'error-row';
+                row.innerHTML = `
+                    <td>
+                        <div class="profile-cell">
+                            <div class="profile-pic-small" style="background: #dc3545; color: white; display: flex; align-items: center; justify-content: center; font-size: 20px;">!</div>
+                            <div class="profile-info-small">
+                                <div class="username-small" style="color: #dc3545;">@${data.username}</div>
+                                <div class="followers-small">Error: ${data.error_message || 'Failed to process'}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td style="color: #999;">
+                        <em>No email generated - ${data.error_message || 'Processing failed'}</em>
+                    </td>
+                    <td>
+                        <button class="btn-small btn-reject-small" onclick="retryInfluencer('${data.original_url}', ${index})">
+                            Retry
+                        </button>
+                    </td>
+                `;
+                return;
+            }
+
+            row.className = 'result-row';
+            row.innerHTML = `
+                <td>
+                    <div class="profile-cell clickable" onclick="toggleRowDetails(${index})">
+                        ${data.profile_pic_url ? 
+                            `<img src="${data.profile_pic_url}" class="profile-pic-small" alt="${data.username}">` : 
+                            '<div class="profile-pic-small" style="background: #ddd;"></div>'
+                        }
+                        <div class="profile-info-small">
+                            <div class="username-small">
+                                @${data.username}
+                                ${data.is_verified ? '<span style="color: #007bff; margin-left: 4px;">✓</span>' : ''}
+                            </div>
+                            <div class="followers-small">${formatNumber(data.follower_count)} followers</div>
+                        </div>
+                        <span class="expand-icon" id="expand-${index}">▼</span>
+                    </div>
+                </td>
+                <td>
+                    <div class="email-preview" id="email-${index}">
+                        ${data.outreach_email ? data.outreach_email.substring(0, 80) + '...' : 'No email generated'}
+                    </div>
+                </td>
+                <td>
+                    <div class="action-cell" id="actions-${index}">
+                        <button class="btn-small btn-copy-small" onclick="copyEmail(${index})">
+                            Copy
+                        </button>
+                        <button class="btn-small btn-approve-small" onclick="approveInfluencer(${index})">
+                            Approve
+                        </button>
+                        <button class="btn-small btn-reject-small" onclick="rejectInfluencer(${index})">
+                            Reject
+                        </button>
+                    </div>
+                </td>
+            `;
+
+            // Add expandable details row
+            const detailsRow = document.createElement('tr');
+            detailsRow.id = `details-${index}`;
+            detailsRow.className = 'details-row';
+            detailsRow.style.display = 'none';
+            detailsRow.innerHTML = `
+                <td colspan="3">
+                    <div class="details-content">
+                        <div class="details-section">
+                            <h4>Biography</h4>
+                            <p>${data.biography || 'No bio available'}</p>
+                        </div>
+                        <div class="details-section">
+                            <h4>Full Email</h4>
+                            <div class="email-full-box">${data.outreach_email || 'No email generated'}</div>
+                        </div>
+                        ${data.email_found && data.email_found !== 'no_email_found' ? `
+                        <div class="details-section">
+                            <h4>Contact Email</h4>
+                            <p>📧 ${data.email_found}</p>
+                        </div>
+                        ` : ''}
+                    </div>
+                </td>
+            `;
+            
+            row.parentNode.insertBefore(detailsRow, row.nextSibling);
         }
 
         // Retry a single influencer
