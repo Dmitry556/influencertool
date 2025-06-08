@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Influencer Analysis Tool</title>
+    <title>Batch Influencer Email Generator</title>
     <style>
         * {
             margin: 0;
@@ -13,441 +13,678 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f5f5f5;
+            background: #f8f9fa;
             padding: 20px;
             min-height: 100vh;
         }
 
         .container {
-            max-width: 800px;
+            max-width: 1400px;
             margin: 0 auto;
         }
 
-        h1 {
+        .header {
             text-align: center;
+            margin-bottom: 40px;
+        }
+
+        h1 {
             color: #333;
+            font-size: 32px;
             margin-bottom: 10px;
-            font-size: 28px;
         }
 
         .subtitle {
-            text-align: center;
             color: #666;
-            margin-bottom: 30px;
-            font-size: 14px;
+            font-size: 16px;
         }
 
+        /* Input Section */
         .input-section {
             background: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-            display: flex;
-            gap: 10px;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            color: #333;
             margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
-        input {
-            flex: 1;
-            padding: 12px 16px;
+        .url-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .url-input-wrapper {
+            position: relative;
+        }
+
+        .url-input {
+            width: 100%;
+            padding: 12px 16px 12px 40px;
             border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 16px;
-            transition: border-color 0.3s;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: all 0.3s;
         }
 
-        input:focus {
+        .url-input:focus {
             outline: none;
             border-color: #007bff;
+            background: #f8f9ff;
         }
 
-        button {
-            padding: 12px 24px;
-            background: #007bff;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: 500;
-            transition: background 0.3s;
+        .url-input:valid {
+            border-color: #28a745;
         }
 
-        button:hover {
-            background: #0056b3;
-        }
-
-        #status {
-            text-align: center;
-            padding: 12px;
-            margin-bottom: 20px;
-            border-radius: 8px;
-            font-weight: 500;
-        }
-
-        .loading {
-            color: #007bff;
-            background: #e7f3ff;
-        }
-
-        .error {
-            color: #dc3545;
-            background: #ffeaed;
-        }
-
-        .success {
-            color: #28a745;
-            background: #e6f7e6;
-        }
-
-        .influencer-card {
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-        }
-
-        .profile-header {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            margin-bottom: 25px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid #eee;
-        }
-
-        .profile-pic {
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 3px solid #f0f0f0;
-        }
-
-        .profile-info h2 {
-            font-size: 24px;
-            margin-bottom: 5px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .verified-badge {
-            width: 20px;
-            height: 20px;
-            background: #007bff;
-            border-radius: 50%;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
+        .input-number {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
             font-size: 12px;
-        }
-
-        .username {
-            color: #666;
-            font-size: 16px;
-        }
-
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-            margin-bottom: 25px;
-            padding: 20px;
-            background: #f8f9fa;
-            border-radius: 10px;
-        }
-
-        .stat {
-            text-align: center;
-        }
-
-        .stat-value {
-            font-size: 28px;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 5px;
-        }
-
-        .stat-label {
-            font-size: 14px;
-            color: #666;
-        }
-
-        .section {
-            margin: 25px 0;
-        }
-
-        .section h3 {
-            font-size: 18px;
-            margin-bottom: 12px;
-            color: #333;
-        }
-
-        .bio {
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 8px;
-            line-height: 1.6;
-            color: #555;
-        }
-
-        .email-section {
-            padding: 20px;
-            background: #e8f5e9;
-            border-radius: 8px;
-            border: 1px solid #c8e6c9;
-        }
-
-        .email-content {
-            white-space: pre-wrap;
-            line-height: 1.6;
-            color: #333;
-            font-size: 15px;
+            font-weight: 600;
         }
 
         .action-buttons {
             display: flex;
             gap: 15px;
-            margin-top: 25px;
+            align-items: center;
         }
 
-        .btn-approve {
-            background: #28a745;
-            flex: 1;
+        .btn-generate {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 14px 32px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
         }
 
-        .btn-approve:hover {
-            background: #218838;
+        .btn-generate:hover {
+            background: #0056b3;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,123,255,0.3);
         }
 
-        .btn-reject {
-            background: #dc3545;
-            flex: 1;
-        }
-
-        .btn-reject:hover {
-            background: #c82333;
-        }
-
-        .copy-btn {
+        .btn-clear {
             background: #6c757d;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
             font-size: 14px;
-            padding: 8px 16px;
-            margin-top: 10px;
-            transition: background 0.3s;
+            cursor: pointer;
+            transition: all 0.3s;
         }
 
-        .copy-btn:hover {
+        .btn-clear:hover {
             background: #5a6268;
         }
 
-        .email-found {
-            margin-top: 10px;
-            padding: 10px;
-            background: #fff3cd;
-            border-radius: 6px;
-            color: #856404;
+        .counter {
+            color: #666;
             font-size: 14px;
+            margin-left: auto;
         }
 
-        @media (max-width: 600px) {
-            .stats {
+        /* Results Section */
+        .results-section {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.08);
+            display: none;
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .results-table th {
+            background: #f8f9fa;
+            padding: 16px;
+            text-align: left;
+            font-size: 14px;
+            font-weight: 600;
+            color: #666;
+            border-bottom: 2px solid #e0e0e0;
+            position: sticky;
+            top: 0;
+        }
+
+        .results-table td {
+            padding: 16px;
+            border-bottom: 1px solid #f0f0f0;
+            vertical-align: middle;
+        }
+
+        .results-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .profile-cell {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .profile-pic-small {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .profile-info-small {
+            line-height: 1.4;
+        }
+
+        .username-small {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .followers-small {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .email-preview {
+            max-width: 400px;
+            font-size: 13px;
+            line-height: 1.5;
+            color: #555;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+
+        .email-preview:hover {
+            background: #f0f0f0;
+        }
+
+        .email-full {
+            display: none;
+            white-space: pre-wrap;
+        }
+
+        .action-cell {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-small {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-approve-small {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-approve-small:hover {
+            background: #218838;
+        }
+
+        .btn-reject-small {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-reject-small:hover {
+            background: #c82333;
+        }
+
+        .btn-copy-small {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-copy-small:hover {
+            background: #5a6268;
+        }
+
+        /* Loading State */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255,255,255,0.95);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .loading-content {
+            text-align: center;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #007bff;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .loading-subtext {
+            font-size: 14px;
+            color: #666;
+        }
+
+        /* Status Messages */
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-approved {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-rejected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px;
+            color: #999;
+        }
+
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        /* Export Button */
+        .btn-export {
+            background: #17a2b8;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-left: auto;
+        }
+
+        .btn-export:hover {
+            background: #138496;
+        }
+
+        @media (max-width: 768px) {
+            .url-grid {
                 grid-template-columns: 1fr;
             }
             
-            .profile-header {
-                flex-direction: column;
-                text-align: center;
+            .results-table {
+                font-size: 12px;
             }
             
             .action-buttons {
-                flex-direction: column;
+                flex-wrap: wrap;
             }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Influencer Analysis Tool</h1>
-        <p class="subtitle">Percorso® - Italian Luxury Menswear</p>
-        
-        <div class="input-section">
-            <input type="text" id="instagramUrl" placeholder="https://instagram.com/username" value="">
-            <button onclick="analyzeProfile()">Analyze</button>
+        <div class="header">
+            <h1>Batch Email Generator</h1>
+            <p class="subtitle">Generate personalized outreach emails for multiple influencers at once</p>
         </div>
-        
-        <div id="status"></div>
-        <div id="results"></div>
+
+        <div class="input-section">
+            <h2 class="section-title">
+                <span>📱</span>
+                <span>Paste Instagram URLs</span>
+            </h2>
+            
+            <div class="url-grid" id="urlGrid">
+                <!-- URL inputs will be generated here -->
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn-generate" onclick="generateEmails()">
+                    Generate All Emails
+                </button>
+                <button class="btn-clear" onclick="clearAll()">
+                    Clear All
+                </button>
+                <span class="counter" id="urlCounter">0 URLs entered</span>
+            </div>
+        </div>
+
+        <div class="results-section" id="resultsSection">
+            <div style="display: flex; align-items: center; margin-bottom: 20px;">
+                <h2 class="section-title">
+                    <span>✉️</span>
+                    <span>Generated Emails</span>
+                </h2>
+                <button class="btn-export" onclick="exportResults()">
+                    Export to CSV
+                </button>
+            </div>
+            
+            <div id="resultsContent">
+                <!-- Results will be displayed here -->
+            </div>
+        </div>
+    </div>
+
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <div class="loading-text" id="loadingText">Processing influencers...</div>
+            <div class="loading-subtext" id="loadingSubtext">This may take a moment</div>
+        </div>
     </div>
 
     <script>
-        let analysisData = {};
+        let processedData = [];
+        let urlInputs = [];
 
-        async function analyzeProfile() {
-            const urlInput = document.getElementById('instagramUrl');
-            const url = urlInput.value.trim();
-            
-            if (!url) {
-                showStatus('Please enter an Instagram URL', 'error');
-                return;
-            }
+        // Initialize URL inputs
+        function initializeInputs() {
+            const urlGrid = document.getElementById('urlGrid');
+            urlGrid.innerHTML = '';
+            urlInputs = [];
 
-            showStatus('Analyzing profile...', 'loading');
-            document.getElementById('results').innerHTML = '';
-
-            // Generate unique ID for this analysis
-            const analysisId = Date.now().toString();
-
-            // Send to Clay webhook via backend
-            try {
-                await fetch('/api/analyze', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        instagram_url: url,
-                        callback_url: `${window.location.origin}/api/webhook`,
-                        analysis_id: analysisId
-                    })
-                });
+            for (let i = 0; i < 30; i++) {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'url-input-wrapper';
                 
-                showStatus('Processing... This may take 30 seconds', 'loading');
+                wrapper.innerHTML = `
+                    <span class="input-number">${i + 1}</span>
+                    <input type="text" 
+                           class="url-input" 
+                           placeholder="instagram.com/username"
+                           onpaste="handlePaste(event, ${i})"
+                           oninput="updateCounter()">
+                `;
                 
-                // Start polling for results
-                pollForResults(analysisId);
-                
-            } catch (error) {
-                showStatus('Error sending request', 'error');
+                urlGrid.appendChild(wrapper);
+                urlInputs.push(wrapper.querySelector('input'));
             }
         }
 
-        async function pollForResults(analysisId) {
-            let attempts = 0;
-            const maxAttempts = 30; // 60 seconds total
+        // Handle paste event to auto-fill multiple fields
+        function handlePaste(event, index) {
+            event.preventDefault();
+            const pastedText = event.clipboardData.getData('text');
+            const urls = pastedText.split(/\n|\s/).filter(url => url.trim());
             
-            const pollInterval = setInterval(async () => {
-                attempts++;
+            urls.forEach((url, i) => {
+                if (index + i < urlInputs.length) {
+                    urlInputs[index + i].value = url.trim();
+                }
+            });
+            
+            updateCounter();
+        }
+
+        // Update URL counter
+        function updateCounter() {
+            const filledInputs = urlInputs.filter(input => input.value.trim()).length;
+            document.getElementById('urlCounter').textContent = `${filledInputs} URLs entered`;
+        }
+
+        // Clear all inputs
+        function clearAll() {
+            urlInputs.forEach(input => input.value = '');
+            updateCounter();
+            document.getElementById('resultsSection').style.display = 'none';
+            processedData = [];
+        }
+
+        // Generate emails for all URLs
+        async function generateEmails() {
+            const urls = urlInputs
+                .map(input => input.value.trim())
+                .filter(url => url);
+
+            if (urls.length === 0) {
+                alert('Please enter at least one Instagram URL');
+                return;
+            }
+
+            showLoading(true);
+            document.getElementById('resultsSection').style.display = 'none';
+            processedData = [];
+
+            // Process in batches to avoid overwhelming the server
+            const batchSize = 5;
+            const results = [];
+
+            for (let i = 0; i < urls.length; i += batchSize) {
+                const batch = urls.slice(i, i + batchSize);
+                const batchResults = await processBatch(batch, i);
+                results.push(...batchResults);
                 
+                // Update loading text
+                document.getElementById('loadingSubtext').textContent = 
+                    `Processed ${results.length} of ${urls.length} influencers`;
+            }
+
+            processedData = results;
+            displayResults(results);
+            showLoading(false);
+        }
+
+        // Process a batch of URLs
+        async function processBatch(urls, startIndex) {
+            const promises = urls.map(async (url, index) => {
+                const analysisId = Date.now().toString() + '_' + (startIndex + index);
+                
+                try {
+                    // Send to Clay
+                    await fetch('/api/analyze', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            instagram_url: url,
+                            callback_url: `${window.location.origin}/api/webhook`,
+                            analysis_id: analysisId
+                        })
+                    });
+
+                    // Poll for results
+                    const result = await pollForResult(analysisId);
+                    return { ...result, original_url: url };
+                } catch (error) {
+                    console.error(`Error processing ${url}:`, error);
+                    return {
+                        original_url: url,
+                        error: true,
+                        username: 'Error',
+                        full_name: 'Failed to process'
+                    };
+                }
+            });
+
+            return Promise.all(promises);
+        }
+
+        // Poll for individual result
+        async function pollForResult(analysisId) {
+            const maxAttempts = 30;
+            
+            for (let i = 0; i < maxAttempts; i++) {
                 try {
                     const response = await fetch(`/api/webhook?id=${analysisId}`);
                     const data = await response.json();
                     
                     if (response.status === 200 && data.username) {
-                        clearInterval(pollInterval);
-                        displayResults(data);
-                    } else if (attempts >= maxAttempts) {
-                        clearInterval(pollInterval);
-                        showStatus('Analysis timed out. Please try again.', 'error');
+                        return data;
                     }
                 } catch (error) {
                     console.error('Polling error:', error);
                 }
-            }, 2000); // Poll every 2 seconds
+                
+                await new Promise(resolve => setTimeout(resolve, 2000));
+            }
+            
+            throw new Error('Timeout waiting for results');
         }
 
-        function showStatus(message, type) {
-            const status = document.getElementById('status');
-            status.textContent = message;
-            status.className = type;
+        // Display results in table
+        function displayResults(results) {
+            const resultsContent = document.getElementById('resultsContent');
             
-            if (type === 'error' || type === 'success') {
-                setTimeout(() => {
-                    status.textContent = '';
-                    status.className = '';
-                }, 5000);
+            if (results.length === 0) {
+                resultsContent.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">📭</div>
+                        <p>No results to display</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let tableHTML = `
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th>Profile</th>
+                            <th>Generated Email</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            results.forEach((data, index) => {
+                if (data.error) {
+                    tableHTML += `
+                        <tr>
+                            <td colspan="3" style="text-align: center; color: #dc3545;">
+                                Failed to process: ${data.original_url}
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                const emailPreview = data.outreach_email ? 
+                    data.outreach_email.substring(0, 100) + '...' : 
+                    'No email generated';
+
+                tableHTML += `
+                    <tr id="row-${index}">
+                        <td>
+                            <div class="profile-cell">
+                                ${data.profile_pic_url ? 
+                                    `<img src="${data.profile_pic_url}" class="profile-pic-small" alt="${data.username}">` : 
+                                    '<div class="profile-pic-small" style="background: #ddd;"></div>'
+                                }
+                                <div class="profile-info-small">
+                                    <div class="username-small">@${data.username}</div>
+                                    <div class="followers-small">${formatNumber(data.follower_count)} followers</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="email-preview" onclick="toggleEmail(${index})">
+                                <div id="preview-${index}">${emailPreview}</div>
+                                <div id="full-${index}" class="email-full">${data.outreach_email || 'No email generated'}</div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="action-cell" id="actions-${index}">
+                                <button class="btn-small btn-copy-small" onclick="copyEmail(${index})">
+                                    Copy
+                                </button>
+                                <button class="btn-small btn-approve-small" onclick="approveInfluencer(${index})">
+                                    Approve
+                                </button>
+                                <button class="btn-small btn-reject-small" onclick="rejectInfluencer(${index})">
+                                    Reject
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            tableHTML += `
+                    </tbody>
+                </table>
+            `;
+
+            resultsContent.innerHTML = tableHTML;
+            document.getElementById('resultsSection').style.display = 'block';
+        }
+
+        // Toggle email preview
+        function toggleEmail(index) {
+            const preview = document.getElementById(`preview-${index}`);
+            const full = document.getElementById(`full-${index}`);
+            
+            if (full.style.display === 'block') {
+                preview.style.display = 'block';
+                full.style.display = 'none';
+            } else {
+                preview.style.display = 'none';
+                full.style.display = 'block';
             }
         }
 
-        function displayResults(data) {
-            const resultsDiv = document.getElementById('results');
-            
-            // Format follower/following counts
-            const followers = formatNumber(data.follower_count || 0);
-            const following = formatNumber(data.following_count || 0);
-            const posts = formatNumber(data.posts_count || 0);
-            
-            resultsDiv.innerHTML = `
-                <div class="influencer-card">
-                    <div class="profile-header">
-                        ${data.profile_pic_url ? `<img src="${data.profile_pic_url}" alt="${data.username}" class="profile-pic">` : '<div class="profile-pic" style="background: #ddd;"></div>'}
-                        <div class="profile-info">
-                            <h2>
-                                ${data.full_name || data.username}
-                                ${data.is_verified ? '<span class="verified-badge">✓</span>' : ''}
-                            </h2>
-                            <p class="username">@${data.username}</p>
-                        </div>
-                    </div>
-                    
-                    <div class="stats">
-                        <div class="stat">
-                            <div class="stat-value">${followers}</div>
-                            <div class="stat-label">Followers</div>
-                        </div>
-                        <div class="stat">
-                            <div class="stat-value">${following}</div>
-                            <div class="stat-label">Following</div>
-                        </div>
-                        <div class="stat">
-                            <div class="stat-value">${posts}</div>
-                            <div class="stat-label">Posts</div>
-                        </div>
-                    </div>
-                    
-                    ${data.biography ? `
-                    <div class="section">
-                        <h3>Bio</h3>
-                        <div class="bio">${data.biography}</div>
-                    </div>
-                    ` : ''}
-                    
-                    ${data.email_found && data.email_found !== 'no_email_found' ? `
-                    <div class="email-found">
-                        📧 Email found: <strong>${data.email_found}</strong>
-                    </div>
-                    ` : ''}
-                    
-                    ${data.outreach_email ? `
-                    <div class="section">
-                        <h3>Generated Email</h3>
-                        <div class="email-section">
-                            <div class="email-content">${data.outreach_email}</div>
-                            <button class="copy-btn" onclick="copyEmail(event)">Copy Email</button>
-                        </div>
-                    </div>
-                    ` : ''}
-                    
-                    <div class="action-buttons">
-                        <button class="btn-approve" onclick="approveInfluencer('${data.username}')">
-                            Approve & Send to Instantly
-                        </button>
-                        <button class="btn-reject" onclick="rejectInfluencer('${data.username}')">
-                            Reject
-                        </button>
-                    </div>
-                </div>
-            `;
-            
-            
-            // Store all data for later use
-            analysisData = data;
-            
-            showStatus('Analysis complete!', 'success');
-        }
-
-        function formatNumber(num) {
-            if (!num) return '0';
-            if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
-            if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
-            return num.toString();
-        }
-
-        function copyEmail(event) {
-            if (analysisData.outreach_email) {
-                navigator.clipboard.writeText(analysisData.outreach_email);
+        // Copy email to clipboard
+        function copyEmail(index) {
+            const data = processedData[index];
+            if (data.outreach_email) {
+                navigator.clipboard.writeText(data.outreach_email);
+                
                 const btn = event.target;
                 const originalText = btn.textContent;
                 btn.textContent = 'Copied!';
@@ -460,8 +697,9 @@
             }
         }
 
-        async function approveInfluencer(username) {
-            showStatus(`Approving ${username}...`, 'loading');
+        // Approve influencer
+        async function approveInfluencer(index) {
+            const data = processedData[index];
             
             try {
                 await fetch('/api/approve', {
@@ -470,43 +708,76 @@
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        username: analysisData.username,
-                        full_name: analysisData.full_name,
-                        email: analysisData.email_found || 'no_email',
-                        follower_count: analysisData.follower_count,
-                        following_count: analysisData.following_count,
-                        posts_count: analysisData.posts_count,
-                        biography: analysisData.biography,
-                        profile_pic_url: analysisData.profile_pic_url,
-                        is_verified: analysisData.is_verified,
-                        outreach_email: analysisData.outreach_email,
-                        instagram_url: document.getElementById('instagramUrl').value,
+                        username: data.username,
+                        full_name: data.full_name,
+                        email: data.email_found || 'no_email',
+                        follower_count: data.follower_count,
+                        following_count: data.following_count,
+                        posts_count: data.posts_count,
+                        biography: data.biography,
+                        profile_pic_url: data.profile_pic_url,
+                        is_verified: data.is_verified,
+                        outreach_email: data.outreach_email,
+                        instagram_url: data.original_url,
                         approved_at: new Date().toISOString(),
                         approved_by: 'Xixi'
                     })
                 });
                 
-                showStatus(`✅ ${username} approved and sent to campaign!`, 'success');
-                
-                // Clear the form after approval
-                setTimeout(() => {
-                    document.getElementById('results').innerHTML = '';
-                    document.getElementById('instagramUrl').value = '';
-                }, 3000);
+                // Update UI
+                document.getElementById(`actions-${index}`).innerHTML = 
+                    '<span class="status-badge status-approved">✓ Approved</span>';
                 
             } catch (error) {
-                showStatus('Error sending approval', 'error');
+                console.error('Error approving:', error);
+                alert('Failed to approve influencer');
             }
         }
 
-        function rejectInfluencer(username) {
-            showStatus(`Rejected ${username}`, 'error');
-            // Optionally clear the form
-            setTimeout(() => {
-                document.getElementById('results').innerHTML = '';
-                document.getElementById('instagramUrl').value = '';
-            }, 2000);
+        // Reject influencer
+        function rejectInfluencer(index) {
+            document.getElementById(`actions-${index}`).innerHTML = 
+                '<span class="status-badge status-rejected">✗ Rejected</span>';
         }
+
+        // Export results to CSV
+        function exportResults() {
+            if (processedData.length === 0) return;
+
+            let csv = 'Username,Full Name,Followers,Email Found,Outreach Email,Status\n';
+            
+            processedData.forEach((data, index) => {
+                const status = document.getElementById(`actions-${index}`).textContent.trim();
+                const email = (data.outreach_email || '').replace(/"/g, '""');
+                
+                csv += `"${data.username}","${data.full_name || ''}","${data.follower_count || 0}","${data.email_found || 'no_email'}","${email}","${status}"\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `influencer_emails_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+        }
+
+        // Show/hide loading overlay
+        function showLoading(show) {
+            document.getElementById('loadingOverlay').style.display = show ? 'flex' : 'none';
+        }
+
+        // Format number helper
+        function formatNumber(num) {
+            if (!num) return '0';
+            if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+            if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+            return num.toString();
+        }
+
+        // Initialize on load
+        window.onload = function() {
+            initializeInputs();
+        };
     </script>
 </body>
 </html>
