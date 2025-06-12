@@ -225,8 +225,12 @@
             color: #666;
         }
 
-        .email-preview {
+        /* Email Display and Editing */
+        .email-container {
             max-width: 400px;
+        }
+
+        .email-display {
             font-size: 13px;
             line-height: 1.5;
             color: #555;
@@ -234,32 +238,92 @@
             padding: 8px;
             border-radius: 6px;
             transition: background 0.2s;
+            position: relative;
         }
 
-        .email-preview:hover {
+        .email-display:hover {
             background: #f0f0f0;
         }
 
-        .email-full {
-            display: none;
-            white-space: pre-wrap;
-            font-family: inherit;
+        .email-display.edited {
+            background: #fff3cd;
         }
 
-        .action-cell {
+        .edited-badge {
+            display: inline-block;
+            background: #ffc107;
+            color: #856404;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 3px;
+            margin-left: 8px;
+        }
+
+        .email-editor {
+            display: none;
+            width: 100%;
+        }
+
+        .email-textarea {
+            width: 100%;
+            min-height: 150px;
+            padding: 10px;
+            border: 2px solid #007bff;
+            border-radius: 6px;
+            font-size: 13px;
+            font-family: inherit;
+            resize: vertical;
+        }
+
+        .editor-actions {
             display: flex;
             gap: 8px;
+            margin-top: 8px;
+        }
+
+        .btn-save, .btn-cancel {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .btn-save {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-save:hover {
+            background: #218838;
+        }
+
+        .btn-cancel {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-cancel:hover {
+            background: #5a6268;
+        }
+
+        /* Action Buttons */
+        .action-cell {
+            display: flex;
+            gap: 6px;
             flex-wrap: wrap;
+            align-items: center;
         }
 
         .btn-small {
-            padding: 8px 16px;
+            padding: 6px 14px;
             border: none;
             border-radius: 6px;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 500;
             cursor: pointer;
             transition: all 0.2s;
+            white-space: nowrap;
         }
 
         .btn-approve-small {
@@ -289,9 +353,42 @@
             background: #5a6268;
         }
 
+        .btn-edit-small {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .btn-edit-small:hover:not(:disabled) {
+            background: #138496;
+        }
+
+        .btn-regenerate-small {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .btn-regenerate-small:hover:not(:disabled) {
+            background: #e0a800;
+        }
+
+        .btn-instagram-small {
+            background: #E1306C;
+            color: white;
+        }
+
+        .btn-instagram-small:hover:not(:disabled) {
+            background: #C13584;
+        }
+
         .btn-small:disabled {
             opacity: 0.6;
             cursor: not-allowed;
+        }
+
+        .regenerate-count {
+            font-size: 10px;
+            color: #666;
+            margin-left: 4px;
         }
 
         /* Status Messages */
@@ -311,6 +408,11 @@
         .status-rejected {
             background: #f8d7da;
             color: #721c24;
+        }
+
+        .status-dm-sent {
+            background: #e2e3e5;
+            color: #383d41;
         }
 
         /* Loading states */
@@ -431,6 +533,16 @@
             margin-bottom: 20px;
         }
 
+        .no-email-notice {
+            color: #856404;
+            background: #fff3cd;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            display: inline-block;
+            margin-bottom: 8px;
+        }
+
         @media (max-width: 768px) {
             .url-grid {
                 grid-template-columns: 1fr;
@@ -440,7 +552,7 @@
                 font-size: 12px;
             }
             
-            .email-preview {
+            .email-container {
                 max-width: 200px;
             }
         }
@@ -631,9 +743,14 @@
                             successCount++;
                         }
                         
-                        // Store and update result
-                        processedData[index] = result;
-                        updateResultRow(index, result);
+                        // Store and update result with additional tracking fields
+                        processedData[index] = {
+                            ...result,
+                            isEdited: false,
+                            editedEmail: null,
+                            regenerateCount: 0
+                        };
+                        updateResultRow(index, processedData[index]);
                         updateProgress();
                         
                         return result;
@@ -652,11 +769,11 @@
         }
 
         // Process a single influencer
-        async function processInfluencer(url, index) {
+        async function processInfluencer(url, index, isRegenerate = false) {
             const analysisId = Date.now().toString() + '_' + Math.random().toString(36).substr(2, 9);
             
             try {
-                console.log(`Processing ${url} with ID ${analysisId}`);
+                console.log(`Processing ${url} with ID ${analysisId}${isRegenerate ? ' (regenerate)' : ''}`);
                 
                 // Send to Clay
                 const response = await fetch('/api/analyze', {
@@ -667,7 +784,8 @@
                     body: JSON.stringify({
                         instagram_url: url,
                         callback_url: `${window.location.origin}/api/webhook`,
-                        analysis_id: analysisId
+                        analysis_id: analysisId,
+                        regenerate: isRegenerate
                     })
                 });
 
@@ -677,7 +795,19 @@
 
                 // Poll for results with timeout
                 const result = await pollForResult(analysisId, 35); // 35 attempts = ~70 seconds
-                return { ...result, original_url: url, success: true };
+                
+                // Check if email was found
+                const emailFound = result.email_found && 
+                                  result.email_found !== 'no_email' && 
+                                  result.email_found !== '' &&
+                                  result.email_found !== 'null';
+                
+                return { 
+                    ...result, 
+                    original_url: url, 
+                    success: true,
+                    emailFound: emailFound
+                };
                 
             } catch (error) {
                 console.error(`Error processing ${url}:`, error);
@@ -692,7 +822,8 @@
                     username: username,
                     full_name: 'Failed to process',
                     error_message: error.message || 'Processing failed',
-                    follower_count: 0
+                    follower_count: 0,
+                    emailFound: false
                 };
             }
         }
@@ -705,9 +836,9 @@
                 <table class="results-table">
                     <thead>
                         <tr>
-                            <th width="25%">Profile</th>
-                            <th width="55%">Generated Email</th>
-                            <th width="20%">Actions</th>
+                            <th width="20%">Profile</th>
+                            <th width="50%">Generated Email</th>
+                            <th width="30%">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="resultsTableBody">
@@ -776,9 +907,8 @@
             }
 
             // Success case
-            const emailPreview = data.outreach_email ? 
-                data.outreach_email.substring(0, 120) + '...' : 
-                'No email generated';
+            const emailToShow = data.editedEmail || data.outreach_email || 'No email generated';
+            const isEdited = data.isEdited;
 
             row.className = 'result-row';
             row.innerHTML = `
@@ -798,25 +928,152 @@
                     </div>
                 </td>
                 <td>
-                    <div class="email-preview" onclick="toggleEmail(${index})">
-                        <div id="preview-${index}">${emailPreview}</div>
-                        <div id="full-${index}" class="email-full">${data.outreach_email || 'No email generated'}</div>
+                    ${!data.emailFound ? '<div class="no-email-notice">📧 No email found - Use Instagram DM</div>' : ''}
+                    <div class="email-container" id="email-container-${index}">
+                        <div class="email-display ${isEdited ? 'edited' : ''}" id="email-display-${index}" onclick="startEditEmail(${index})">
+                            ${emailToShow.replace(/\n/g, '<br>')}
+                            ${isEdited ? '<span class="edited-badge">Edited</span>' : ''}
+                        </div>
+                        <div class="email-editor" id="email-editor-${index}">
+                            <textarea class="email-textarea" id="email-textarea-${index}">${emailToShow}</textarea>
+                            <div class="editor-actions">
+                                <button class="btn-save" onclick="saveEmail(${index})">Save</button>
+                                <button class="btn-cancel" onclick="cancelEdit(${index})">Cancel</button>
+                            </div>
+                        </div>
                     </div>
                 </td>
                 <td>
                     <div class="action-cell" id="actions-${index}">
-                        <button class="btn-small btn-copy-small" onclick="copyEmail(${index})">
-                            Copy
-                        </button>
-                        <button class="btn-small btn-approve-small" onclick="approveInfluencer(${index})">
-                            Approve
-                        </button>
+                        ${data.emailFound ? `
+                            <button class="btn-small btn-copy-small" onclick="copyEmail(${index})">
+                                Copy
+                            </button>
+                            <button class="btn-small btn-edit-small" onclick="startEditEmail(${index})">
+                                Edit
+                            </button>
+                            <button class="btn-small btn-regenerate-small" onclick="regenerateEmail(${index})" ${data.regenerateCount >= 3 ? 'disabled' : ''}>
+                                Regenerate${data.regenerateCount > 0 ? `<span class="regenerate-count">${data.regenerateCount}x</span>` : ''}
+                            </button>
+                            <button class="btn-small btn-approve-small" onclick="approveInfluencer(${index})">
+                                Approve
+                            </button>
+                        ` : `
+                            <button class="btn-small btn-copy-small" onclick="copyEmail(${index})">
+                                Copy Message
+                            </button>
+                            <button class="btn-small btn-instagram-small" onclick="openInstagram(${index})">
+                                Open Instagram
+                            </button>
+                        `}
                         <button class="btn-small btn-reject-small" onclick="rejectInfluencer(${index})">
                             Reject
                         </button>
                     </div>
                 </td>
             `;
+        }
+
+        // Start editing email
+        function startEditEmail(index) {
+            const display = document.getElementById(`email-display-${index}`);
+            const editor = document.getElementById(`email-editor-${index}`);
+            const textarea = document.getElementById(`email-textarea-${index}`);
+            
+            if (!display || !editor) return;
+            
+            display.style.display = 'none';
+            editor.style.display = 'block';
+            textarea.focus();
+            
+            // Auto-resize textarea
+            textarea.style.height = 'auto';
+            textarea.style.height = textarea.scrollHeight + 'px';
+        }
+
+        // Save edited email
+        function saveEmail(index) {
+            const textarea = document.getElementById(`email-textarea-${index}`);
+            const data = processedData[index];
+            
+            if (!data || !textarea) return;
+            
+            data.editedEmail = textarea.value;
+            data.isEdited = true;
+            
+            updateResultRow(index, data);
+        }
+
+        // Cancel email edit
+        function cancelEdit(index) {
+            const display = document.getElementById(`email-display-${index}`);
+            const editor = document.getElementById(`email-editor-${index}`);
+            const textarea = document.getElementById(`email-textarea-${index}`);
+            const data = processedData[index];
+            
+            if (!display || !editor || !data) return;
+            
+            // Restore original or edited value
+            textarea.value = data.editedEmail || data.outreach_email || '';
+            
+            display.style.display = 'block';
+            editor.style.display = 'none';
+        }
+
+        // Regenerate email for a single influencer
+        async function regenerateEmail(index) {
+            const data = processedData[index];
+            if (!data || !data.original_url || data.regenerateCount >= 3) return;
+
+            const row = document.getElementById(`row-${index}`);
+            if (!row) return;
+
+            // Show loading state just for email cell
+            const emailContainer = document.getElementById(`email-container-${index}`);
+            if (emailContainer) {
+                emailContainer.innerHTML = '<div class="loading-text-skeleton"></div>';
+            }
+
+            try {
+                const result = await processInfluencer(data.original_url, index, true);
+                
+                // Update processed data
+                processedData[index] = {
+                    ...result,
+                    isEdited: false,
+                    editedEmail: null,
+                    regenerateCount: (data.regenerateCount || 0) + 1
+                };
+                
+                updateResultRow(index, processedData[index]);
+                
+                // Show success feedback
+                const btn = row.querySelector('.btn-regenerate-small');
+                if (btn) {
+                    const originalText = btn.innerHTML;
+                    btn.innerHTML = '✓ Regenerated!';
+                    setTimeout(() => {
+                        updateResultRow(index, processedData[index]);
+                    }, 2000);
+                }
+            } catch (error) {
+                console.error('Regeneration failed:', error);
+                updateResultRow(index, data); // Restore original state
+            }
+        }
+
+        // Open Instagram profile
+        function openInstagram(index) {
+            const data = processedData[index];
+            if (!data || !data.username) return;
+            
+            // First copy the message
+            copyEmail(index);
+            
+            // Then open Instagram profile
+            setTimeout(() => {
+                window.open(`https://instagram.com/${data.username}`, '_blank');
+            }, 500);
         }
 
         // Retry a single influencer
@@ -848,8 +1105,13 @@
 
             try {
                 const result = await processInfluencer(data.original_url, index);
-                processedData[index] = result;
-                updateResultRow(index, result);
+                processedData[index] = {
+                    ...result,
+                    isEdited: false,
+                    editedEmail: null,
+                    regenerateCount: 0
+                };
+                updateResultRow(index, processedData[index]);
             } catch (error) {
                 console.error('Retry failed:', error);
                 updateResultRow(index, data); // Restore error state
@@ -886,29 +1148,16 @@
             throw new Error('Timeout waiting for results');
         }
 
-        // Toggle email preview
-        function toggleEmail(index) {
-            const preview = document.getElementById(`preview-${index}`);
-            const full = document.getElementById(`full-${index}`);
-            
-            if (!preview || !full) return;
-            
-            if (full.style.display === 'block') {
-                preview.style.display = 'block';
-                full.style.display = 'none';
-            } else {
-                preview.style.display = 'none';
-                full.style.display = 'block';
-            }
-        }
-
         // Copy email to clipboard
         async function copyEmail(index) {
             const data = processedData[index];
-            if (!data || !data.outreach_email) return;
+            if (!data) return;
+
+            const emailToCopy = data.editedEmail || data.outreach_email || '';
+            if (!emailToCopy) return;
 
             try {
-                await navigator.clipboard.writeText(data.outreach_email);
+                await navigator.clipboard.writeText(emailToCopy);
                 
                 const btn = event.target;
                 const originalText = btn.textContent;
@@ -917,7 +1166,7 @@
                 
                 setTimeout(() => {
                     btn.textContent = originalText;
-                    btn.style.background = '#6c757d';
+                    btn.style.background = '';
                 }, 2000);
             } catch (error) {
                 console.error('Failed to copy:', error);
@@ -935,6 +1184,9 @@
             btn.textContent = 'Sending...';
             
             try {
+                // Use edited email if available
+                const emailToSend = data.editedEmail || data.outreach_email;
+                
                 const response = await fetch('/api/approve', {
                     method: 'POST',
                     headers: {
@@ -950,10 +1202,12 @@
                         biography: data.biography,
                         profile_pic_url: data.profile_pic_url,
                         is_verified: data.is_verified,
-                        outreach_email: data.outreach_email,
+                        outreach_email: emailToSend,
                         instagram_url: data.original_url,
                         approved_at: new Date().toISOString(),
-                        approved_by: 'Xixi'
+                        approved_by: 'Xixi',
+                        was_edited: data.isEdited,
+                        regenerate_count: data.regenerateCount
                     })
                 });
 
@@ -991,16 +1245,19 @@
                 return;
             }
 
-            let csv = 'Username,Full Name,Followers,Email Found,Outreach Email,Status\n';
+            let csv = 'Username,Full Name,Followers,Email Found,Outreach Email,Status,Edited,Regenerated\n';
             
             processedData.forEach((data, index) => {
                 if (!data) return;
                 
                 const actionsEl = document.getElementById(`actions-${index}`);
                 const status = actionsEl ? actionsEl.textContent.trim() : 'Pending';
-                const email = (data.outreach_email || '').replace(/"/g, '""').replace(/\n/g, ' ');
+                const email = (data.editedEmail || data.outreach_email || '').replace(/"/g, '""').replace(/\n/g, ' ');
+                const emailFound = data.emailFound ? 'Yes' : 'No';
+                const edited = data.isEdited ? 'Yes' : 'No';
+                const regenerated = data.regenerateCount || 0;
                 
-                csv += `"${data.username || ''}","${data.full_name || ''}","${data.follower_count || 0}","${data.email_found || 'no_email'}","${email}","${status}"\n`;
+                csv += `"${data.username || ''}","${data.full_name || ''}","${data.follower_count || 0}","${emailFound}","${email}","${status}","${edited}","${regenerated}"\n`;
             });
 
             const blob = new Blob([csv], { type: 'text/csv' });
