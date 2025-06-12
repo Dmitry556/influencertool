@@ -5,22 +5,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Batch Influencer Email Generator</title>
     <style>
+        /* Box sizing for all elements */
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
         * {
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
+            font-family: inherit;
         }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: #f8f9fa;
-            padding: 20px;
+            padding: 20px 0;
             min-height: 100vh;
         }
 
         .container {
             max-width: 1400px;
             margin: 0 auto;
+            width: 100%;
+            padding: 0 20px;
         }
 
         .header {
@@ -186,6 +193,7 @@
             background: #f0f0f0;
             border-radius: 20px;
             font-size: 14px;
+            min-width: 200px;
         }
 
         .progress-mini {
@@ -194,12 +202,16 @@
             background: #e0e0e0;
             border-radius: 3px;
             overflow: hidden;
+            position: relative;
         }
 
         .progress-mini-fill {
             height: 100%;
             background: #28a745;
             transition: width 0.3s ease;
+            position: absolute;
+            left: 0;
+            top: 0;
         }
 
         .toggle-completed {
@@ -239,8 +251,22 @@
             z-index: 10;
         }
 
-        .results-table th:first-child {
+        .results-table th:nth-child(1) {
+            width: 200px;
+            min-width: 200px;
+            max-width: 200px;
             padding-left: 30px;
+        }
+
+        .results-table th:nth-child(2) {
+            width: auto;
+            min-width: 300px;
+        }
+
+        .results-table th:nth-child(3) {
+            width: 380px;
+            min-width: 380px;
+            max-width: 380px;
         }
 
         .results-table td {
@@ -255,9 +281,10 @@
 
         .results-table tr {
             position: relative;
+            height: auto;
         }
 
-        .results-table tr:hover {
+        .results-table tbody tr:hover {
             background: #f8f9fa;
         }
 
@@ -266,10 +293,14 @@
             align-items: center;
             gap: 8px;
             position: relative;
+            min-width: 0;
         }
 
         .profile-info-small {
             line-height: 1.4;
+            min-width: 0;
+            flex: 1;
+            overflow: hidden;
         }
 
         .username-small {
@@ -278,18 +309,35 @@
             display: flex;
             align-items: center;
             gap: 4px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 100%;
         }
 
         .followers-small {
             font-size: 13px;
             color: #666;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         /* Email Display and Editing */
+        .email-cell-wrapper {
+            width: 100%;
+            max-width: 100%;
+            overflow: hidden;
+            position: relative;
+            word-break: break-word;
+        }
+
         .email-container {
             position: relative;
+            width: 100%;
+            max-width: 100%;
             overflow: hidden;
-            word-wrap: break-word;
+            contain: layout style;
         }
 
         .email-display {
@@ -302,13 +350,17 @@
             transition: background 0.2s;
             word-break: break-word;
             overflow-wrap: break-word;
-            display: block;
+            white-space: pre-line;
             white-space: pre-wrap;
             max-width: 100%;
+            display: block;
+            overflow: hidden;
+            box-sizing: border-box;
         }
 
         .email-display:hover {
             background: #f0f0f0;
+            cursor: text;
         }
 
         .email-display.edited {
@@ -323,15 +375,18 @@
             padding: 2px 6px;
             border-radius: 3px;
             margin-left: 8px;
+            vertical-align: middle;
         }
 
         .email-editor {
             display: none;
             width: 100%;
+            max-width: 100%;
         }
 
         .email-textarea {
             width: 100%;
+            max-width: 100%;
             min-height: 150px;
             padding: 10px;
             border: 2px solid #007bff;
@@ -339,6 +394,13 @@
             font-size: 13px;
             font-family: inherit;
             resize: vertical;
+            box-sizing: border-box;
+            transition: border-color 0.2s;
+        }
+
+        .email-textarea:focus {
+            outline: none;
+            border-color: #0056b3;
         }
 
         .editor-actions {
@@ -353,6 +415,7 @@
             border-radius: 4px;
             font-size: 12px;
             cursor: pointer;
+            white-space: nowrap;
         }
 
         .btn-save {
@@ -379,10 +442,12 @@
             gap: 6px;
             flex-wrap: wrap;
             align-items: center;
+            max-width: 100%;
         }
 
+        /* Button hover states with transform */
         .btn-small {
-            padding: 6px 14px;
+            padding: 5px 12px;
             border: none;
             border-radius: 6px;
             font-size: 12px;
@@ -390,6 +455,19 @@
             cursor: pointer;
             transition: all 0.2s;
             white-space: nowrap;
+            flex-shrink: 0;
+            line-height: 1.4;
+            transform: translateY(0);
+        }
+
+        .btn-small:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .btn-small:active:not(:disabled) {
+            transform: translateY(0);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
         }
 
         .btn-approve-small {
@@ -437,6 +515,11 @@
             background: #e0a800;
         }
 
+        .btn-regenerate-small:disabled {
+            background: #f0f0f0;
+            color: #999;
+        }
+
         .btn-instagram-small {
             background: #E1306C;
             color: white;
@@ -454,7 +537,8 @@
         .regenerate-count {
             font-size: 10px;
             color: #666;
-            margin-left: 4px;
+            margin-left: 2px;
+            vertical-align: super;
         }
 
         /* Completed row styles */
@@ -473,10 +557,9 @@
         }
 
         .row-completed .email-display {
-            max-height: 24px;
+            max-height: 60px;
             overflow: hidden;
             text-overflow: ellipsis;
-            white-space: nowrap;
         }
 
         .row-completed .btn-small:not(.btn-instagram-small) {
@@ -485,8 +568,21 @@
         }
 
         /* Hide completed rows when toggled */
-        .hide-completed .row-completed {
+        tbody.hide-completed .row-completed {
+            display: none !important;
+        }
+
+        /* Empty state message */
+        .empty-completed-message {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-style: italic;
             display: none;
+        }
+
+        tbody.hide-completed:has(.row-completed):not(:has(tr:not(.row-completed))) ~ .empty-completed-message {
+            display: block;
         }
 
         /* Success animation */
@@ -495,9 +591,15 @@
                 transform: scale(1);
                 background-color: #28a745;
             }
+            25% {
+                transform: scale(1.05);
+            }
             50% {
                 transform: scale(1.1);
                 background-color: #34ce57;
+            }
+            75% {
+                transform: scale(1.05);
             }
             100% {
                 transform: scale(1);
@@ -520,11 +622,15 @@
         }
 
         .success-checkmark {
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
             color: #28a745;
             font-size: 18px;
             animation: checkmarkGrow 0.5s ease-out;
             margin-right: 8px;
+            vertical-align: middle;
+            flex-shrink: 0;
         }
 
         @keyframes rowSuccess {
@@ -562,11 +668,13 @@
 
         /* Status Messages */
         .status-badge {
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
             padding: 6px 16px;
             border-radius: 20px;
             font-size: 13px;
             font-weight: 500;
+            white-space: nowrap;
         }
 
         .status-approved {
@@ -588,6 +696,7 @@
         .row-active {
             background: rgba(0, 123, 255, 0.08);
             position: relative;
+            transition: background 0.2s ease;
         }
 
         .row-active::before {
@@ -598,6 +707,13 @@
             bottom: 0;
             width: 4px;
             background: #007bff;
+            z-index: 1;
+            animation: pulseWidth 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulseWidth {
+            0%, 100% { width: 4px; }
+            50% { width: 6px; }
         }
 
         .row-active .profile-cell::before {
@@ -609,6 +725,7 @@
             animation: pulse 1.5s infinite;
             top: 50%;
             transform: translateY(-50%);
+            z-index: 2;
         }
 
         @keyframes pulse {
@@ -628,7 +745,7 @@
             margin-top: 5px;
         }
 
-        /* Success notification */
+        /* Success notification with proper z-index */
         .success-notification {
             position: fixed;
             top: 20px;
@@ -641,8 +758,9 @@
             display: flex;
             align-items: center;
             gap: 10px;
-            z-index: 1000;
+            z-index: 2000;
             animation: slideIn 0.3s ease-out;
+            max-width: 400px;
         }
 
         @keyframes slideIn {
@@ -681,6 +799,23 @@
             box-sizing: border-box;
         }
 
+        .results-table {
+            display: table;
+        }
+
+        .results-table tbody {
+            display: table-row-group;
+            vertical-align: middle;
+        }
+
+        .results-table tr {
+            display: table-row;
+        }
+
+        .results-table td, .results-table th {
+            display: table-cell;
+        }
+
         /* Loading states */
         .loading-text-skeleton {
             height: 40px;
@@ -688,6 +823,8 @@
             background-size: 200% 100%;
             animation: loading 1.5s infinite;
             border-radius: 6px;
+            width: 100%;
+            will-change: background-position;
         }
 
         @keyframes loading {
@@ -702,6 +839,8 @@
             width: 24px;
             height: 24px;
             animation: spin 1s linear infinite;
+            display: inline-block;
+            flex-shrink: 0;
         }
 
         @keyframes spin {
@@ -721,6 +860,15 @@
         /* Error state */
         .error-row {
             background: #fff5f5 !important;
+        }
+
+        .error-row .username-small {
+            color: #dc3545 !important;
+        }
+
+        .error-row .followers-small {
+            color: #721c24 !important;
+            font-size: 12px;
         }
 
         /* Export Button */
@@ -788,14 +936,24 @@
             margin-bottom: 20px;
         }
 
+        /* Table wrapper styles */
+        .table-wrapper {
+            overflow-x: auto;
+            overflow-y: visible;
+            max-width: 100%;
+            -webkit-overflow-scrolling: touch;
+            position: relative;
+        }
+
         .no-email-notice {
             color: #856404;
             background: #fff3cd;
-            padding: 8px 12px;
+            padding: 6px 12px;
             border-radius: 4px;
             font-size: 12px;
             display: inline-block;
             margin-bottom: 8px;
+            max-width: 100%;
         }
 
         /* Quick action buttons for productivity */
@@ -839,15 +997,41 @@
             
             .results-table {
                 font-size: 12px;
-                min-width: auto;
+                min-width: 600px;
+            }
+            
+            .results-table td:first-child {
+                width: 150px;
+                min-width: 150px;
+                font-size: 11px;
+            }
+            
+            .results-table td:nth-child(3) {
+                width: 280px;
+                min-width: 280px;
             }
             
             .email-display {
-                max-width: 200px;
+                font-size: 12px;
+            }
+            
+            .btn-small {
+                padding: 4px 8px;
+                font-size: 11px;
             }
             
             .keyboard-hint {
                 display: none;
+            }
+            
+            .header-left {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .progress-stats {
+                width: 100%;
             }
         }
     </style>
@@ -896,9 +1080,9 @@
                         <span>Generated Emails</span>
                     </h2>
                     <div class="progress-stats" id="progressStats" style="display: none;">
-                        <span id="progressText">0 of 0 completed</span>
+                        <span id="progressText">Processing...</span>
                         <div class="progress-mini">
-                            <div class="progress-mini-fill" id="progressMiniFill"></div>
+                            <div class="progress-mini-fill" id="progressMiniFill" style="width: 0%;"></div>
                         </div>
                     </div>
                     <button class="toggle-completed" id="toggleCompleted" onclick="toggleCompletedVisibility()" style="display: none;">
@@ -910,8 +1094,10 @@
                 </button>
             </div>
             
-            <div id="resultsContent" style="overflow-x: auto; position: relative;">
-                <!-- Results will be displayed here -->
+            <div id="resultsContent">
+                <div class="table-wrapper">
+                    <!-- Results will be displayed here -->
+                </div>
             </div>
         </div>
     </div>
@@ -946,52 +1132,52 @@
                 data && !data.error && (data.approved || data.rejected || data.dmSent)
             ).length;
 
-            if (total === 0) return;
-
-            // Show progress stats
-            const progressStats = document.getElementById('progressStats');
-            const toggleBtn = document.getElementById('toggleCompleted');
-            progressStats.style.display = 'flex';
-            
-            if (completed > 0) {
-                toggleBtn.style.display = 'block';
-            }
-
-            // Update text and progress bar
-            document.getElementById('progressText').textContent = `${completed} of ${total} completed`;
-            const percentage = (completed / total) * 100;
-            document.getElementById('progressMiniFill').style.width = `${percentage}%`;
-
-            // Update active row indicator
-            document.querySelectorAll('.row-active').forEach(row => row.classList.remove('row-active'));
-            const nextPendingIndex = processedData.findIndex(data => 
-                data && !data.error && !data.approved && !data.rejected && !data.dmSent
-            );
-            if (nextPendingIndex !== -1) {
-                const nextRow = document.getElementById(`row-${nextPendingIndex}`);
-                if (nextRow) nextRow.classList.add('row-active');
-            }
-
-            // Celebration at 100%
-            if (completed === total && total > 0) {
-                progressStats.classList.add('celebration');
-                setTimeout(() => progressStats.classList.remove('celebration'), 600);
+            // Always show progress stats if we have any valid results
+            if (total > 0) {
+                const progressStats = document.getElementById('progressStats');
+                const toggleBtn = document.getElementById('toggleCompleted');
+                progressStats.style.display = 'flex';
                 
-                // Show completion notification
-                if (!document.querySelector('.all-complete-notification')) {
-                    const notification = document.createElement('div');
-                    notification.className = 'success-notification all-complete-notification';
-                    notification.style.cssText = 'background: linear-gradient(135deg, #28a745, #20c997); font-size: 16px;';
-                    notification.innerHTML = `
-                        <span style="font-size: 24px;">🎉</span>
-                        <span>All influencers processed! Great job!</span>
-                    `;
-                    document.body.appendChild(notification);
+                if (completed > 0) {
+                    toggleBtn.style.display = 'block';
+                }
 
-                    setTimeout(() => {
-                        notification.classList.add('slide-out');
-                        setTimeout(() => notification.remove(), 300);
-                    }, 4000);
+                // Update text and progress bar
+                document.getElementById('progressText').textContent = `${completed} of ${total} completed`;
+                const percentage = (completed / total) * 100;
+                document.getElementById('progressMiniFill').style.width = `${percentage}%`;
+
+                // Update active row indicator
+                document.querySelectorAll('.row-active').forEach(row => row.classList.remove('row-active'));
+                const nextPendingIndex = processedData.findIndex(data => 
+                    data && !data.error && !data.approved && !data.rejected && !data.dmSent
+                );
+                if (nextPendingIndex !== -1) {
+                    const nextRow = document.getElementById(`row-${nextPendingIndex}`);
+                    if (nextRow) nextRow.classList.add('row-active');
+                }
+
+                // Celebration at 100%
+                if (completed === total && total > 0) {
+                    progressStats.classList.add('celebration');
+                    setTimeout(() => progressStats.classList.remove('celebration'), 600);
+                    
+                    // Show completion notification
+                    if (!document.querySelector('.all-complete-notification')) {
+                        const notification = document.createElement('div');
+                        notification.className = 'success-notification all-complete-notification';
+                        notification.style.cssText = 'background: linear-gradient(135deg, #28a745, #20c997); font-size: 16px;';
+                        notification.innerHTML = `
+                            <span style="font-size: 24px;">🎉</span>
+                            <span>All influencers processed! Great job!</span>
+                        `;
+                        document.body.appendChild(notification);
+
+                        setTimeout(() => {
+                            notification.classList.add('slide-out');
+                            setTimeout(() => notification.remove(), 300);
+                        }, 4000);
+                    }
                 }
             }
         }
@@ -1097,10 +1283,20 @@
         function normalizeUrl(url) {
             if (!url) return '';
             
-            // Extract username from Instagram URL
-            const match = url.match(/instagram\.com\/([^\/\?]+)/i);
-            if (match) {
-                return match[1].toLowerCase();
+            // Extract username from Instagram URL - handle various formats
+            const patterns = [
+                /instagram\.com\/([^\/\?\s]+)/i,
+                /instagram\.com\/p\/[^\/]+\/([^\/\?\s]+)/i,
+                /instagram\.com\/reel\/[^\/]+\/([^\/\?\s]+)/i,
+                /instagram\.com\/stories\/([^\/\?\s]+)/i
+            ];
+            
+            for (const pattern of patterns) {
+                const match = url.match(pattern);
+                if (match && match[1]) {
+                    // Remove trailing slashes and clean up
+                    return match[1].toLowerCase().replace(/\/$/, '');
+                }
             }
             
             // Fallback: just lowercase the whole URL
@@ -1185,11 +1381,21 @@
                 
                 duplicateAlert.onclick = () => duplicateAlert.remove();
                 
-                const resultsContent = document.getElementById('resultsContent');
-                resultsContent.insertBefore(duplicateAlert, resultsContent.firstChild);
+                const tableWrapper = document.querySelector('.table-wrapper');
+                if (tableWrapper) {
+                    if (tableWrapper.firstChild) {
+                        tableWrapper.insertBefore(duplicateAlert, tableWrapper.firstChild);
+                    } else {
+                        tableWrapper.appendChild(duplicateAlert);
+                    }
+                }
                 
                 // Remove alert after 5 seconds
-                setTimeout(() => duplicateAlert.remove(), 5000);
+                setTimeout(() => {
+                    if (duplicateAlert && duplicateAlert.parentNode) {
+                        duplicateAlert.remove();
+                    }
+                }, 5000);
             }
 
             // Disable generate button during processing
@@ -1202,6 +1408,12 @@
             document.getElementById('resultsSection').style.display = 'block';
             document.getElementById('progressInfo').style.display = 'flex';
             document.getElementById('exportBtn').disabled = false;
+            
+            // Initialize progress stats visibility
+            const progressStats = document.getElementById('progressStats');
+            if (progressStats) {
+                progressStats.style.display = 'none'; // Hide until we have results
+            }
 
             // Clear any existing alerts
             document.querySelectorAll('.duplicate-alert, .error-summary-alert').forEach(el => el.remove());
@@ -1260,13 +1472,8 @@
                         updateResultRow(index, processedData[index]);
                         updateProgress();
                         
-                        // Update completion stats after all results are in
-                        if (index === 0 || processedData.filter(data => data).length === 1) {
-                            // Initialize progress stats on first result
-                            setTimeout(() => updateCompletionStats(), 100);
-                        } else {
-                            updateCompletionStats();
-                        }
+                        // Update completion stats after each result
+                        updateCompletionStats();
                         
                         return result;
                     });
@@ -1281,8 +1488,8 @@
             generateBtn.textContent = 'Generate All Emails';
             document.getElementById('progressInfo').style.display = 'none';
 
-            // Update completion stats
-            updateCompletionStats();
+            // Update completion stats after a short delay to ensure all DOM updates are complete
+            setTimeout(() => updateCompletionStats(), 250);
 
             // Show retry all button if there were errors
             if (errorCount > 0) {
@@ -1294,8 +1501,8 @@
                     <button class="btn-small btn-reject-small" onclick="retryAllFailed()" style="margin-left: 10px;">Retry All Failed</button>
                 `;
                 
-                const resultsContent = document.getElementById('resultsContent');
-                resultsContent.insertBefore(errorAlert, resultsContent.firstChild);
+                const tableWrapper = document.querySelector('.table-wrapper');
+                tableWrapper.insertBefore(errorAlert, tableWrapper.firstChild);
             }
 
             // Scroll to first new result if adding to existing results
@@ -1366,9 +1573,21 @@
             } catch (error) {
                 console.error(`Error processing ${url}:`, error);
                 
-                // Extract username from URL
-                const usernameMatch = url.match(/instagram\.com\/([^\/\?]+)/);
-                const username = usernameMatch ? usernameMatch[1] : 'Unknown';
+                // Extract username from URL - handle various formats
+                let username = 'Unknown';
+                const patterns = [
+                    /instagram\.com\/([^\/\?\s]+)/i,
+                    /instagram\.com\/p\/[^\/]+\/([^\/\?\s]+)/i,
+                    /instagram\.com\/reel\/[^\/]+\/([^\/\?\s]+)/i
+                ];
+                
+                for (const pattern of patterns) {
+                    const match = url.match(pattern);
+                    if (match && match[1]) {
+                        username = match[1].replace(/\/$/, ''); // Remove trailing slash
+                        break;
+                    }
+                }
                 
                 return {
                     original_url: url,
@@ -1413,7 +1632,9 @@
                             </div>
                         </td>
                         <td>
-                            <div class="loading-text-skeleton"></div>
+                            <div style="max-width: 100%; overflow: hidden;">
+                                <div class="loading-text-skeleton"></div>
+                            </div>
                         </td>
                         <td>
                             <div class="spinner-small"></div>
@@ -1427,7 +1648,7 @@
                 </table>
             `;
 
-            resultsContent.innerHTML = tableHTML;
+            tableWrapper.innerHTML = tableHTML;
         }
 
         // Add new rows to existing table
@@ -1477,13 +1698,15 @@
                     <td>
                         <div class="profile-cell">
                             <div class="profile-info-small">
-                                <div class="username-small" style="color: #dc3545;">@${data.username}</div>
+                                <div class="username-small">@${data.username}</div>
                                 <div class="followers-small">Error: ${data.error_message || 'Failed to process'}</div>
                             </div>
                         </div>
                     </td>
                     <td style="color: #999;">
-                        <em>No email generated - ${data.error_message || 'Processing failed'}</em>
+                        <div style="max-width: 100%; overflow: hidden;">
+                            <em>No email generated - ${data.error_message || 'Processing failed'}</em>
+                        </div>
                     </td>
                     <td>
                         <button class="btn-small btn-reject-small" onclick="retryInfluencer(${index})">
@@ -1512,8 +1735,8 @@
                         </div>
                     </div>
                 </td>
-                <td>
-                    <div style="max-width: 100%; overflow: hidden;">
+                <td class="email-column">
+                    <div class="email-cell-wrapper">
                         ${!data.emailFound ? '<div class="no-email-notice">📧 No email found - Use Instagram DM</div>' : ''}
                         <div class="email-container" id="email-container-${index}">
                             <div class="email-display ${isEdited ? 'edited' : ''}" id="email-display-${index}" onclick="startEditEmail(${index})">
@@ -1679,7 +1902,9 @@
                     </div>
                 </td>
                 <td>
-                    <div class="loading-text-skeleton"></div>
+                    <div style="max-width: 100%; overflow: hidden;">
+                        <div class="loading-text-skeleton"></div>
+                    </div>
                 </td>
                 <td>
                     <div class="spinner-small"></div>
@@ -1703,6 +1928,8 @@
 
         // Poll for individual result
         async function pollForResult(analysisId, maxAttempts = 35) {
+            const startTime = Date.now();
+            
             for (let i = 0; i < maxAttempts; i++) {
                 try {
                     const response = await fetch(`/api/webhook?id=${analysisId}`);
@@ -1717,7 +1944,8 @@
                         }
                     } else if (response.status === 202) {
                         // Still pending, continue polling
-                        console.log(`Still pending for ${analysisId}, attempt ${i + 1}`);
+                        const elapsed = Math.round((Date.now() - startTime) / 1000);
+                        console.log(`Still pending for ${analysisId}, attempt ${i + 1} (${elapsed}s elapsed)`);
                     }
                 } catch (error) {
                     console.error(`Polling error for ${analysisId}:`, error);
@@ -1727,8 +1955,9 @@
                 await new Promise(resolve => setTimeout(resolve, 2000));
             }
             
-            console.error(`Timeout for ${analysisId} after ${maxAttempts} attempts`);
-            throw new Error('Timeout waiting for results');
+            const totalSeconds = maxAttempts * 2;
+            console.error(`Timeout for ${analysisId} after ${maxAttempts} attempts (${totalSeconds} seconds)`);
+            throw new Error(`Request timed out after ${totalSeconds} seconds. Clay may be experiencing delays.`);
         }
 
         // Copy email to clipboard
@@ -1914,7 +2143,7 @@
             if (failedIndices.length === 0) return;
 
             // Clear error alerts
-            document.querySelectorAll('.error-summary-alert').forEach(el => el.remove());
+            document.querySelectorAll('.error-summary-alert, .help-alert').forEach(el => el.remove());
 
             // Show progress
             document.getElementById('progressInfo').style.display = 'flex';
@@ -1929,15 +2158,45 @@
 
             updateRetryProgress();
 
-            // Retry each failed item
+            // Disable generate button during retry
+            const generateBtn = document.getElementById('generateBtn');
+            generateBtn.disabled = true;
+            generateBtn.textContent = 'Retrying...';
+
+            // Retry each failed item with a small delay between them
             for (const index of failedIndices) {
                 await retryInfluencer(index);
                 completedCount++;
                 updateRetryProgress();
+                
+                // Small delay between retries to avoid overwhelming the API
+                await new Promise(resolve => setTimeout(resolve, 500));
             }
 
-            // Hide progress
+            // Hide progress and re-enable button
             document.getElementById('progressInfo').style.display = 'none';
+            generateBtn.disabled = false;
+            generateBtn.textContent = 'Generate All Emails';
+            
+            // Check if any still failed
+            const stillFailed = processedData.filter(data => data && data.error).length;
+            if (stillFailed > 0) {
+                const errorAlert = document.createElement('div');
+                errorAlert.className = 'error-summary-alert';
+                errorAlert.style.cssText = 'background: #f8d7da; color: #721c24; padding: 10px 15px; border-radius: 6px; margin-bottom: 15px; font-size: 14px; display: flex; justify-content: space-between; align-items: center;';
+                errorAlert.innerHTML = `
+                    <span>⚠️ ${stillFailed} URL${stillFailed > 1 ? 's' : ''} still failing</span>
+                    <button class="btn-small btn-reject-small" onclick="retryAllFailed()" style="margin-left: 10px;">Retry Again</button>
+                `;
+                
+                const tableWrapper = document.querySelector('.table-wrapper');
+                if (tableWrapper) {
+                    tableWrapper.insertBefore(errorAlert, tableWrapper.firstChild);
+                }
+            } else {
+                // All succeeded!
+                showSuccessNotification('All URLs successfully processed!');
+            }
         }
 
         // Format number helper
@@ -1964,18 +2223,44 @@
                 
                 if (pendingIndex === -1) return;
                 
+                const row = document.getElementById(`row-${pendingIndex}`);
+                if (!row) return;
+                
                 // Enter key - approve
                 if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
-                    const approveBtn = document.querySelector(`#row-${pendingIndex} .btn-approve-small:not(:disabled)`);
-                    if (approveBtn) approveBtn.click();
+                    
+                    // Scroll to row if not visible
+                    const rect = row.getBoundingClientRect();
+                    if (rect.top < 100 || rect.bottom > window.innerHeight - 100) {
+                        row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                    
+                    setTimeout(() => {
+                        const approveBtn = row.querySelector('.btn-approve-small:not(:disabled)');
+                        const instagramBtn = row.querySelector('.btn-instagram-small:not(:disabled)');
+                        if (approveBtn) {
+                            approveBtn.click();
+                        } else if (instagramBtn) {
+                            instagramBtn.click();
+                        }
+                    }, 300);
                 }
                 
                 // Delete key - reject
                 if (e.key === 'Delete') {
                     e.preventDefault();
-                    const rejectBtn = document.querySelector(`#row-${pendingIndex} .btn-reject-small`);
-                    if (rejectBtn) rejectBtn.click();
+                    
+                    // Scroll to row if not visible
+                    const rect = row.getBoundingClientRect();
+                    if (rect.top < 100 || rect.bottom > window.innerHeight - 100) {
+                        row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                    
+                    setTimeout(() => {
+                        const rejectBtn = row.querySelector('.btn-reject-small:not(:disabled)');
+                        if (rejectBtn) rejectBtn.click();
+                    }, 300);
                 }
             });
         };
