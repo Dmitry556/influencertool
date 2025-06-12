@@ -222,6 +222,8 @@
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
+            position: relative;
+            table-layout: fixed; /* Prevent column shifting */
         }
 
         .results-table th {
@@ -234,12 +236,25 @@
             border-bottom: 2px solid #e0e0e0;
             position: sticky;
             top: 0;
+            z-index: 10;
+        }
+
+        .results-table th:first-child {
+            padding-left: 30px;
         }
 
         .results-table td {
             padding: 16px;
             border-bottom: 1px solid #f0f0f0;
             vertical-align: middle;
+        }
+
+        .results-table td:first-child {
+            padding-left: 30px; /* Consistent padding for all rows */
+        }
+
+        .results-table tr {
+            position: relative;
         }
 
         .results-table tr:hover {
@@ -250,6 +265,7 @@
             display: flex;
             align-items: center;
             gap: 12px;
+            position: relative;
         }
 
         .profile-pic-small {
@@ -279,7 +295,9 @@
 
         /* Email Display and Editing */
         .email-container {
-            max-width: 400px;
+            position: relative;
+            overflow: hidden;
+            word-wrap: break-word;
         }
 
         .email-display {
@@ -290,7 +308,11 @@
             padding: 8px;
             border-radius: 6px;
             transition: background 0.2s;
-            position: relative;
+            word-break: break-word;
+            overflow-wrap: break-word;
+            display: block;
+            white-space: pre-wrap;
+            max-width: 100%;
         }
 
         .email-display:hover {
@@ -572,23 +594,46 @@
 
         /* Active row indicator for keyboard shortcuts */
         .row-active {
+            background: rgba(0, 123, 255, 0.08);
             position: relative;
         }
 
         .row-active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: #007bff;
+        }
+
+        .row-active .profile-cell::before {
             content: '▶';
             position: absolute;
-            left: -20px;
+            left: 10px;
+            color: #007bff;
+            font-size: 14px;
+            animation: pulse 1.5s infinite;
             top: 50%;
             transform: translateY(-50%);
-            color: #007bff;
-            font-size: 12px;
-            animation: pulse 1.5s infinite;
         }
 
         @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
+        }
+
+        .results-table td:nth-child(2) {
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Keyboard shortcut hint */
+        .keyboard-hint {
+            font-size: 12px;
+            color: #999;
+            margin-top: 5px;
         }
 
         /* Success notification */
@@ -632,6 +677,16 @@
 
         .success-notification.slide-out {
             animation: slideOut 0.3s ease-out forwards;
+        }
+
+        #resultsContent {
+            overflow-x: auto;
+            position: relative;
+            max-width: 100%;
+        }
+
+        .results-table, .results-table * {
+            box-sizing: border-box;
         }
 
         /* Loading states */
@@ -812,10 +867,15 @@
             
             .results-table {
                 font-size: 12px;
+                min-width: auto;
             }
             
-            .email-container {
+            .email-display {
                 max-width: 200px;
+            }
+            
+            .keyboard-hint {
+                display: none;
             }
         }
     </style>
@@ -825,7 +885,7 @@
         <div class="header">
             <h1>Batch Email Generator</h1>
             <p class="subtitle">Generate personalized outreach emails for multiple influencers at once</p>
-            <p style="font-size: 12px; color: #999; margin-top: 5px;">💡 Tip: Use Enter to approve, Delete to reject</p>
+            <p class="keyboard-hint">💡 Tip: Use Enter to approve, Delete to reject</p>
         </div>
 
         <div class="input-section">
@@ -878,7 +938,7 @@
                 </button>
             </div>
             
-            <div id="resultsContent">
+            <div id="resultsContent" style="overflow-x: auto; position: relative;">
                 <!-- Results will be displayed here -->
             </div>
         </div>
@@ -889,7 +949,7 @@
         let urlInputs = [];
         let currentProcessing = false;
         let hideCompleted = false;
-        let approvalStreak = 0;
+        let approvalStreak = 0; // Not currently used but ready for gamification
 
         // Show success notification
         function showSuccessNotification(message) {
@@ -1351,11 +1411,16 @@
             
             let tableHTML = `
                 <table class="results-table">
+                    <colgroup>
+                        <col style="width: 250px;">
+                        <col style="width: auto;">
+                        <col style="width: 380px;">
+                    </colgroup>
                     <thead>
                         <tr>
-                            <th width="20%">Profile</th>
-                            <th width="50%">Generated Email</th>
-                            <th width="30%">Actions</th>
+                            <th>Profile</th>
+                            <th>Generated Email</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody id="resultsTableBody">
@@ -1397,7 +1462,11 @@
         // Add new rows to existing table
         function addNewRowsToTable(newUrls) {
             const tbody = document.getElementById('resultsTableBody');
-            if (!tbody) return;
+            if (!tbody) {
+                // If table doesn't exist, create it
+                initializeResultsTable(newUrls);
+                return;
+            }
 
             newUrls.forEach(({ url, index }) => {
                 const usernameMatch = url.match(/instagram\.com\/([^\/\?]+)/);
@@ -1461,6 +1530,7 @@
             const isEdited = data.isEdited;
 
             row.className = 'result-row';
+            row.setAttribute('data-index', index);
             row.innerHTML = `
                 <td>
                     <div class="profile-cell">
@@ -1478,24 +1548,26 @@
                     </div>
                 </td>
                 <td>
-                    ${!data.emailFound ? '<div class="no-email-notice">📧 No email found - Use Instagram DM</div>' : ''}
-                    <div class="email-container" id="email-container-${index}">
-                        <div class="email-display ${isEdited ? 'edited' : ''}" id="email-display-${index}" onclick="startEditEmail(${index})">
-                            ${emailToShow.replace(/\n/g, '<br>')}
-                            ${isEdited ? '<span class="edited-badge">Edited</span>' : ''}
-                        </div>
-                        <div class="email-editor" id="email-editor-${index}">
-                            <textarea class="email-textarea" id="email-textarea-${index}">${emailToShow}</textarea>
-                            <div class="editor-actions">
-                                <button class="btn-save" onclick="saveEmail(${index})">Save</button>
-                                <button class="btn-cancel" onclick="cancelEdit(${index})">Cancel</button>
+                    <div style="max-width: 100%; overflow: hidden;">
+                        ${!data.emailFound ? '<div class="no-email-notice">📧 No email found - Use Instagram DM</div>' : ''}
+                        <div class="email-container" id="email-container-${index}">
+                            <div class="email-display ${isEdited ? 'edited' : ''}" id="email-display-${index}" onclick="startEditEmail(${index})">
+                                ${emailToShow.replace(/\n/g, '<br>')}
+                                ${isEdited ? '<span class="edited-badge">Edited</span>' : ''}
+                            </div>
+                            <div class="email-editor" id="email-editor-${index}">
+                                <textarea class="email-textarea" id="email-textarea-${index}">${emailToShow}</textarea>
+                                <div class="editor-actions">
+                                    <button class="btn-save" onclick="saveEmail(${index})">Save</button>
+                                    <button class="btn-cancel" onclick="cancelEdit(${index})">Cancel</button>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </td>
                 <td>
                     <div class="action-cell" id="actions-${index}">
-                        <button class="btn-small btn-copy-small" onclick="copyEmail(${index})">
+                        <button class="btn-small btn-copy-small" onclick="copyEmail(${index}, this)">
                             ${data.emailFound ? 'Copy' : 'Copy Message'}
                         </button>
                         <button class="btn-small btn-edit-small" onclick="startEditEmail(${index})">
@@ -1696,17 +1768,19 @@
         }
 
         // Copy email to clipboard
-        async function copyEmail(index) {
+        async function copyEmail(index, buttonElement) {
             const data = processedData[index];
             if (!data) return;
 
             const emailToCopy = data.editedEmail || data.outreach_email || '';
             if (!emailToCopy) return;
 
+            // Get the button element if not passed
+            const btn = buttonElement || event.target;
+
             try {
                 await navigator.clipboard.writeText(emailToCopy);
                 
-                const btn = event.target;
                 const originalText = btn.textContent;
                 btn.textContent = 'Copied!';
                 btn.style.background = '#28a745';
@@ -1717,7 +1791,27 @@
                 }, 2000);
             } catch (error) {
                 console.error('Failed to copy:', error);
-                alert('Failed to copy email to clipboard');
+                // Fallback method for clipboard
+                const textarea = document.createElement('textarea');
+                textarea.value = emailToCopy;
+                textarea.style.position = 'fixed';
+                textarea.style.opacity = '0';
+                document.body.appendChild(textarea);
+                textarea.select();
+                try {
+                    document.execCommand('copy');
+                    const originalText = btn.textContent;
+                    btn.textContent = 'Copied!';
+                    btn.style.background = '#28a745';
+                    
+                    setTimeout(() => {
+                        btn.textContent = originalText;
+                        btn.style.background = '';
+                    }, 2000);
+                } catch (fallbackError) {
+                    alert('Failed to copy email to clipboard. Please try selecting and copying manually.');
+                }
+                document.body.removeChild(textarea);
             }
         }
 
