@@ -87,6 +87,11 @@
             border-color: #28a745;
         }
 
+        .url-input.duplicate {
+            border-color: #ffc107 !important;
+            background-color: #fff3cd !important;
+        }
+
         .input-number {
             position: absolute;
             left: 12px;
@@ -164,6 +169,53 @@
             margin-bottom: 20px;
             flex-wrap: wrap;
             gap: 15px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex: 1;
+        }
+
+        .progress-stats {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 16px;
+            background: #f0f0f0;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+
+        .progress-mini {
+            width: 80px;
+            height: 6px;
+            background: #e0e0e0;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-mini-fill {
+            height: 100%;
+            background: #28a745;
+            transition: width 0.3s ease;
+        }
+
+        .toggle-completed {
+            background: transparent;
+            border: 1px solid #dee2e6;
+            color: #6c757d;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .toggle-completed:hover {
+            background: #f8f9fa;
+            border-color: #6c757d;
         }
 
         .results-table {
@@ -391,6 +443,109 @@
             margin-left: 4px;
         }
 
+        /* Completed row styles */
+        .row-completed {
+            opacity: 0.5;
+            transition: opacity 0.3s ease;
+        }
+
+        .row-completed:hover {
+            opacity: 0.7;
+        }
+
+        .row-completed .username-small {
+            text-decoration: line-through;
+            color: #6c757d;
+        }
+
+        .row-completed .email-display {
+            max-height: 24px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .row-completed .btn-small:not(.btn-instagram-small) {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        /* Hide completed rows when toggled */
+        .hide-completed .row-completed {
+            display: none;
+        }
+
+        /* Success animation */
+        @keyframes successPulse {
+            0% {
+                transform: scale(1);
+                background-color: #28a745;
+            }
+            50% {
+                transform: scale(1.1);
+                background-color: #34ce57;
+            }
+            100% {
+                transform: scale(1);
+                background-color: #28a745;
+            }
+        }
+
+        @keyframes checkmarkGrow {
+            0% {
+                transform: scale(0) rotate(-180deg);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.2) rotate(10deg);
+            }
+            100% {
+                transform: scale(1) rotate(0deg);
+                opacity: 1;
+            }
+        }
+
+        .success-checkmark {
+            display: inline-block;
+            color: #28a745;
+            font-size: 18px;
+            animation: checkmarkGrow 0.5s ease-out;
+            margin-right: 8px;
+        }
+
+        @keyframes rowSuccess {
+            0% {
+                background-color: transparent;
+            }
+            20% {
+                background-color: #d4edda;
+            }
+            100% {
+                background-color: transparent;
+            }
+        }
+
+        .row-success-animation {
+            animation: rowSuccess 1s ease-out;
+        }
+
+        /* Celebration at 100% */
+        @keyframes celebrate {
+            0%, 100% {
+                transform: scale(1);
+            }
+            25% {
+                transform: scale(1.05) rotate(2deg);
+            }
+            75% {
+                transform: scale(1.05) rotate(-2deg);
+            }
+        }
+
+        .celebration {
+            animation: celebrate 0.6s ease-out;
+        }
+
         /* Status Messages */
         .status-badge {
             display: inline-block;
@@ -413,6 +568,70 @@
         .status-dm-sent {
             background: #e2e3e5;
             color: #383d41;
+        }
+
+        /* Active row indicator for keyboard shortcuts */
+        .row-active {
+            position: relative;
+        }
+
+        .row-active::before {
+            content: '▶';
+            position: absolute;
+            left: -20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #007bff;
+            font-size: 12px;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Success notification */
+        .success-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #28a745;
+            color: white;
+            padding: 16px 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 1000;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+
+        .success-notification.slide-out {
+            animation: slideOut 0.3s ease-out forwards;
         }
 
         /* Loading states */
@@ -448,6 +667,15 @@
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
+        }
+
+        @keyframes highlight-new {
+            0% { background-color: #e3f2fd; }
+            100% { background-color: transparent; }
+        }
+        
+        .highlight-new {
+            animation: highlight-new 2s ease-out;
         }
 
         /* Error state */
@@ -543,6 +771,40 @@
             margin-bottom: 8px;
         }
 
+        /* Quick action buttons for productivity */
+        .quick-actions {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 1000;
+        }
+
+        .btn-approve-all {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-size: 14px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+            transition: all 0.3s;
+        }
+
+        .btn-approve-all:hover {
+            background: #218838;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(40, 167, 69, 0.4);
+        }
+
+        .btn-approve-all:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
         @media (max-width: 768px) {
             .url-grid {
                 grid-template-columns: 1fr;
@@ -563,6 +825,7 @@
         <div class="header">
             <h1>Batch Email Generator</h1>
             <p class="subtitle">Generate personalized outreach emails for multiple influencers at once</p>
+            <p style="font-size: 12px; color: #999; margin-top: 5px;">💡 Tip: Use Enter to approve, Delete to reject</p>
         </div>
 
         <div class="input-section">
@@ -580,7 +843,7 @@
                     Generate All Emails
                 </button>
                 <button class="btn-clear" onclick="clearAll()">
-                    Clear All
+                    Clear All & Reset
                 </button>
                 <span class="counter" id="urlCounter">0 URLs entered</span>
             </div>
@@ -595,10 +858,21 @@
             </div>
 
             <div class="results-header">
-                <h2 class="section-title">
-                    <span>✉️</span>
-                    <span>Generated Emails</span>
-                </h2>
+                <div class="header-left">
+                    <h2 class="section-title">
+                        <span>✉️</span>
+                        <span>Generated Emails</span>
+                    </h2>
+                    <div class="progress-stats" id="progressStats" style="display: none;">
+                        <span id="progressText">0 of 0 completed</span>
+                        <div class="progress-mini">
+                            <div class="progress-mini-fill" id="progressMiniFill"></div>
+                        </div>
+                    </div>
+                    <button class="toggle-completed" id="toggleCompleted" onclick="toggleCompletedVisibility()" style="display: none;">
+                        Hide Completed
+                    </button>
+                </div>
                 <button class="btn-export" onclick="exportResults()" id="exportBtn" disabled>
                     Export to CSV
                 </button>
@@ -614,6 +888,96 @@
         let processedData = [];
         let urlInputs = [];
         let currentProcessing = false;
+        let hideCompleted = false;
+        let approvalStreak = 0;
+
+        // Show success notification
+        function showSuccessNotification(message) {
+            const notification = document.createElement('div');
+            notification.className = 'success-notification';
+            notification.innerHTML = `
+                <span style="font-size: 20px;">✓</span>
+                <span>${message}</span>
+            `;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.classList.add('slide-out');
+                setTimeout(() => notification.remove(), 300);
+            }, 2500);
+        }
+
+        // Track completion stats
+        function updateCompletionStats() {
+            const total = processedData.filter(data => data && !data.error).length;
+            const completed = processedData.filter(data => 
+                data && !data.error && (data.approved || data.rejected || data.dmSent)
+            ).length;
+
+            if (total === 0) return;
+
+            // Show progress stats
+            const progressStats = document.getElementById('progressStats');
+            const toggleBtn = document.getElementById('toggleCompleted');
+            progressStats.style.display = 'flex';
+            
+            if (completed > 0) {
+                toggleBtn.style.display = 'block';
+            }
+
+            // Update text and progress bar
+            document.getElementById('progressText').textContent = `${completed} of ${total} completed`;
+            const percentage = (completed / total) * 100;
+            document.getElementById('progressMiniFill').style.width = `${percentage}%`;
+
+            // Update active row indicator
+            document.querySelectorAll('.row-active').forEach(row => row.classList.remove('row-active'));
+            const nextPendingIndex = processedData.findIndex(data => 
+                data && !data.error && !data.approved && !data.rejected && !data.dmSent
+            );
+            if (nextPendingIndex !== -1) {
+                const nextRow = document.getElementById(`row-${nextPendingIndex}`);
+                if (nextRow) nextRow.classList.add('row-active');
+            }
+
+            // Celebration at 100%
+            if (completed === total && total > 0) {
+                progressStats.classList.add('celebration');
+                setTimeout(() => progressStats.classList.remove('celebration'), 600);
+                
+                // Show completion notification
+                if (!document.querySelector('.all-complete-notification')) {
+                    const notification = document.createElement('div');
+                    notification.className = 'success-notification all-complete-notification';
+                    notification.style.cssText = 'background: linear-gradient(135deg, #28a745, #20c997); font-size: 16px;';
+                    notification.innerHTML = `
+                        <span style="font-size: 24px;">🎉</span>
+                        <span>All influencers processed! Great job!</span>
+                    `;
+                    document.body.appendChild(notification);
+
+                    setTimeout(() => {
+                        notification.classList.add('slide-out');
+                        setTimeout(() => notification.remove(), 300);
+                    }, 4000);
+                }
+            }
+        }
+
+        // Toggle completed visibility
+        function toggleCompletedVisibility() {
+            hideCompleted = !hideCompleted;
+            const btn = document.getElementById('toggleCompleted');
+            const tbody = document.getElementById('resultsTableBody');
+            
+            if (hideCompleted) {
+                tbody.classList.add('hide-completed');
+                btn.textContent = 'Show All';
+            } else {
+                tbody.classList.remove('hide-completed');
+                btn.textContent = 'Hide Completed';
+            }
+        }
 
         // Initialize URL inputs
         function initializeInputs() {
@@ -679,6 +1043,14 @@
                 }
             }
             
+            // Check if there are results
+            const hasResults = processedData.some(data => data);
+            if (hasResults) {
+                if (!confirm('This will clear all results and inputs. Are you sure?')) {
+                    return;
+                }
+            }
+            
             urlInputs.forEach(input => {
                 input.value = '';
                 input.classList.remove('has-value');
@@ -689,8 +1061,28 @@
             currentProcessing = false;
         }
 
+        // Normalize URL for comparison
+        function normalizeUrl(url) {
+            if (!url) return '';
+            
+            // Extract username from Instagram URL
+            const match = url.match(/instagram\.com\/([^\/\?]+)/i);
+            if (match) {
+                return match[1].toLowerCase();
+            }
+            
+            // Fallback: just lowercase the whole URL
+            return url.toLowerCase().trim();
+        }
+
         // Generate emails for all URLs
         async function generateEmails() {
+            // Prevent multiple simultaneous processing
+            if (currentProcessing) {
+                alert('Processing is already in progress. Please wait for it to complete.');
+                return;
+            }
+            
             const urls = urlInputs
                 .map((input, index) => ({ url: input.value.trim(), index }))
                 .filter(item => item.url);
@@ -700,41 +1092,124 @@
                 return;
             }
 
+            // Check for already processed URLs (by username)
+            const processedUsernames = new Set();
+            processedData.forEach(data => {
+                if (data && data.username) {
+                    processedUsernames.add(data.username.toLowerCase());
+                }
+            });
+            
+            const newUrls = [];
+            const duplicateIndices = [];
+
+            urls.forEach(({ url, index }) => {
+                const username = normalizeUrl(url);
+                if (processedUsernames.has(username)) {
+                    duplicateIndices.push(index);
+                } else {
+                    newUrls.push({ url, index });
+                }
+            });
+
+            // If all URLs are duplicates
+            if (newUrls.length === 0) {
+                // Highlight all duplicate inputs
+                duplicateIndices.forEach(index => {
+                    const input = urlInputs[index];
+                    if (input) {
+                        input.classList.add('duplicate');
+                        setTimeout(() => {
+                            input.classList.remove('duplicate');
+                        }, 3000);
+                    }
+                });
+                
+                alert('All URLs have already been processed. Clear results to reprocess, or add new URLs.');
+                return;
+            }
+
+            // Show info about duplicates if any
+            if (duplicateIndices.length > 0) {
+                // Highlight duplicate inputs briefly
+                duplicateIndices.forEach(index => {
+                    const input = urlInputs[index];
+                    if (input) {
+                        input.classList.add('duplicate');
+                        setTimeout(() => {
+                            input.classList.remove('duplicate');
+                        }, 3000);
+                    }
+                });
+
+                // Show notification
+                const duplicateAlert = document.createElement('div');
+                duplicateAlert.className = 'duplicate-alert';
+                duplicateAlert.style.cssText = 'background: #fff3cd; color: #856404; padding: 10px 15px; border-radius: 6px; margin-bottom: 15px; font-size: 14px; cursor: pointer; display: flex; justify-content: space-between; align-items: center;';
+                duplicateAlert.innerHTML = `
+                    <span>⚠️ Skipping ${duplicateIndices.length} duplicate URL${duplicateIndices.length > 1 ? 's' : ''} that ${duplicateIndices.length > 1 ? 'have' : 'has'} already been processed</span>
+                    <span style="opacity: 0.7; font-size: 12px;">Click to dismiss</span>
+                `;
+                
+                duplicateAlert.onclick = () => duplicateAlert.remove();
+                
+                const resultsContent = document.getElementById('resultsContent');
+                resultsContent.insertBefore(duplicateAlert, resultsContent.firstChild);
+                
+                // Remove alert after 5 seconds
+                setTimeout(() => duplicateAlert.remove(), 5000);
+            }
+
             // Disable generate button during processing
             const generateBtn = document.getElementById('generateBtn');
             generateBtn.disabled = true;
             generateBtn.textContent = 'Processing...';
             currentProcessing = true;
 
-            // Initialize results
+            // Show results section
             document.getElementById('resultsSection').style.display = 'block';
             document.getElementById('progressInfo').style.display = 'flex';
-            document.getElementById('exportBtn').disabled = true;
-            processedData = new Array(urls.length);
-            
-            // Create initial table
-            initializeResultsTable(urls);
+            document.getElementById('exportBtn').disabled = false;
+
+            // Clear any existing alerts
+            document.querySelectorAll('.duplicate-alert, .error-summary-alert').forEach(el => el.remove());
+
+            // If this is the first batch, initialize the results table
+            if (processedData.filter(data => data).length === 0) {
+                processedData = new Array(30); // Initialize full array
+                initializeResultsTable(newUrls); // Only show new URLs
+            } else {
+                // Add new rows to existing table
+                addNewRowsToTable(newUrls);
+            }
             
             let completedCount = 0;
             let successCount = 0;
             let errorCount = 0;
 
-            // Update progress
+            // Update progress for new URLs only
             const updateProgress = () => {
-                const percentage = (completedCount / urls.length) * 100;
+                const percentage = (completedCount / newUrls.length) * 100;
                 document.getElementById('progressFill').style.width = `${percentage}%`;
+                const urlText = newUrls.length === 1 ? 'URL' : 'URLs';
+                const duplicateText = duplicateIndices.length > 0 ? 
+                    ` (${duplicateIndices.length} duplicate${duplicateIndices.length > 1 ? 's' : ''} skipped)` : '';
                 document.getElementById('progressText').textContent = 
-                    `Processed ${completedCount} of ${urls.length} (${successCount} successful, ${errorCount} errors)`;
+                    `Processing ${completedCount} of ${newUrls.length} new ${urlText}${duplicateText} - ${successCount} successful, ${errorCount} error${errorCount !== 1 ? 's' : ''}`;
             };
 
-            // Process all URLs concurrently with controlled concurrency
+            updateProgress(); // Initialize progress
+
+            // Process only new URLs with controlled concurrency
             const concurrentLimit = 5;
-            const results = [];
+            let firstNewRowIndex = null;
             
-            for (let i = 0; i < urls.length; i += concurrentLimit) {
-                const batch = urls.slice(i, i + concurrentLimit);
-                const batchPromises = batch.map(({ url, index }) => 
-                    processInfluencer(url, index).then(result => {
+            for (let i = 0; i < newUrls.length; i += concurrentLimit) {
+                const batch = newUrls.slice(i, i + concurrentLimit);
+                const batchPromises = batch.map(({ url, index }) => {
+                    if (firstNewRowIndex === null) firstNewRowIndex = index;
+                    
+                    return processInfluencer(url, index).then(result => {
                         completedCount++;
                         
                         if (result.error) {
@@ -753,9 +1228,12 @@
                         updateResultRow(index, processedData[index]);
                         updateProgress();
                         
+                        // Update completion stats after all results are in
+                        updateCompletionStats();
+                        
                         return result;
-                    })
-                );
+                    });
+                });
                 
                 await Promise.all(batchPromises);
             }
@@ -765,7 +1243,46 @@
             generateBtn.disabled = false;
             generateBtn.textContent = 'Generate All Emails';
             document.getElementById('progressInfo').style.display = 'none';
-            document.getElementById('exportBtn').disabled = false;
+
+            // Update completion stats
+            updateCompletionStats();
+
+            // Show retry all button if there were errors
+            if (errorCount > 0) {
+                const errorAlert = document.createElement('div');
+                errorAlert.className = 'error-summary-alert';
+                errorAlert.style.cssText = 'background: #f8d7da; color: #721c24; padding: 10px 15px; border-radius: 6px; margin-bottom: 15px; font-size: 14px; display: flex; justify-content: space-between; align-items: center;';
+                errorAlert.innerHTML = `
+                    <span>❌ ${errorCount} URL${errorCount > 1 ? 's' : ''} failed to process</span>
+                    <button class="btn-small btn-reject-small" onclick="retryAllFailed()" style="margin-left: 10px;">Retry All Failed</button>
+                `;
+                
+                const resultsContent = document.getElementById('resultsContent');
+                resultsContent.insertBefore(errorAlert, resultsContent.firstChild);
+            }
+
+            // Scroll to first new result if adding to existing results
+            if (firstNewRowIndex !== null && processedData.filter(data => data).length > newUrls.length) {
+                const firstNewRow = document.getElementById(`row-${firstNewRowIndex}`);
+                if (firstNewRow) {
+                    // Highlight all new rows
+                    newUrls.forEach(({ index }) => {
+                        const row = document.getElementById(`row-${index}`);
+                        if (row) row.classList.add('highlight-new');
+                    });
+                    
+                    // Scroll to first new row
+                    setTimeout(() => {
+                        firstNewRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }, 100);
+                }
+            }
+
+            // Show summary if duplicates were skipped
+            if (duplicateIndices.length > 0) {
+                const totalProcessed = processedData.filter(data => data).length;
+                console.log(`Complete! ${newUrls.length} new URLs processed, ${duplicateIndices.length} duplicates skipped. Total: ${totalProcessed}`);
+            }
         }
 
         // Process a single influencer
@@ -877,6 +1394,39 @@
             resultsContent.innerHTML = tableHTML;
         }
 
+        // Add new rows to existing table
+        function addNewRowsToTable(newUrls) {
+            const tbody = document.getElementById('resultsTableBody');
+            if (!tbody) return;
+
+            newUrls.forEach(({ url, index }) => {
+                const usernameMatch = url.match(/instagram\.com\/([^\/\?]+)/);
+                const username = usernameMatch ? usernameMatch[1] : 'Loading...';
+                
+                const row = document.createElement('tr');
+                row.id = `row-${index}`;
+                row.innerHTML = `
+                    <td>
+                        <div class="profile-cell">
+                            <div class="profile-pic-small loading-skeleton"></div>
+                            <div class="profile-info-small">
+                                <div class="username-small">@${username}</div>
+                                <div class="followers-small">Loading...</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="loading-text-skeleton"></div>
+                    </td>
+                    <td>
+                        <div class="spinner-small"></div>
+                    </td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+        }
+
         // Update individual result row
         function updateResultRow(index, data) {
             const row = document.getElementById(`row-${index}`);
@@ -945,23 +1495,20 @@
                 </td>
                 <td>
                     <div class="action-cell" id="actions-${index}">
+                        <button class="btn-small btn-copy-small" onclick="copyEmail(${index})">
+                            ${data.emailFound ? 'Copy' : 'Copy Message'}
+                        </button>
+                        <button class="btn-small btn-edit-small" onclick="startEditEmail(${index})">
+                            Edit
+                        </button>
+                        <button class="btn-small btn-regenerate-small" onclick="regenerateEmail(${index})" ${data.regenerateCount >= 3 ? 'disabled' : ''}>
+                            Regenerate${data.regenerateCount > 0 ? `<span class="regenerate-count">${data.regenerateCount}x</span>` : ''}
+                        </button>
                         ${data.emailFound ? `
-                            <button class="btn-small btn-copy-small" onclick="copyEmail(${index})">
-                                Copy
-                            </button>
-                            <button class="btn-small btn-edit-small" onclick="startEditEmail(${index})">
-                                Edit
-                            </button>
-                            <button class="btn-small btn-regenerate-small" onclick="regenerateEmail(${index})" ${data.regenerateCount >= 3 ? 'disabled' : ''}>
-                                Regenerate${data.regenerateCount > 0 ? `<span class="regenerate-count">${data.regenerateCount}x</span>` : ''}
-                            </button>
                             <button class="btn-small btn-approve-small" onclick="approveInfluencer(${index})">
                                 Approve
                             </button>
                         ` : `
-                            <button class="btn-small btn-copy-small" onclick="copyEmail(${index})">
-                                Copy Message
-                            </button>
                             <button class="btn-small btn-instagram-small" onclick="openInstagram(${index})">
                                 Open Instagram
                             </button>
@@ -1180,7 +1727,11 @@
             if (!data || data.error) return;
 
             const btn = event.target;
+            const row = document.getElementById(`row-${index}`);
+            
+            // Animate button
             btn.disabled = true;
+            btn.style.animation = 'successPulse 0.5s ease-out';
             btn.textContent = 'Sending...';
             
             try {
@@ -1215,14 +1766,31 @@
                     throw new Error('Failed to approve');
                 }
                 
-                // Update UI
+                // Mark as approved in data
+                data.approved = true;
+                
+                // Success animation
+                row.classList.add('row-success-animation');
+                
+                // Show success notification
+                showSuccessNotification(`Email sent to ${data.full_name || data.username}!`);
+                
+                // Update UI with success checkmark
                 document.getElementById(`actions-${index}`).innerHTML = 
-                    '<span class="status-badge status-approved">✓ Approved & Sent</span>';
+                    '<span class="success-checkmark">✓</span><span class="status-badge status-approved">Approved & Sent</span>';
+                
+                // After animation, mark row as completed
+                setTimeout(() => {
+                    row.classList.add('row-completed');
+                    row.classList.remove('row-success-animation');
+                    updateCompletionStats();
+                }, 1000);
                 
             } catch (error) {
                 console.error('Error approving:', error);
                 btn.disabled = false;
                 btn.textContent = 'Approve';
+                btn.style.animation = '';
                 alert('Failed to approve influencer. Please try again.');
             }
         }
@@ -1245,19 +1813,24 @@
                 return;
             }
 
-            let csv = 'Username,Full Name,Followers,Email Found,Outreach Email,Status,Edited,Regenerated\n';
+            let csv = 'Username,Full Name,Followers,Email Found,Outreach Email,Status,Edited,Regenerated,Completed\n';
             
             processedData.forEach((data, index) => {
                 if (!data) return;
                 
-                const actionsEl = document.getElementById(`actions-${index}`);
-                const status = actionsEl ? actionsEl.textContent.trim() : 'Pending';
+                let status = 'Pending';
+                if (data.approved) status = 'Approved';
+                else if (data.rejected) status = 'Rejected';
+                else if (data.dmSent) status = 'DM Sent';
+                else if (data.error) status = 'Error';
+                
                 const email = (data.editedEmail || data.outreach_email || '').replace(/"/g, '""').replace(/\n/g, ' ');
                 const emailFound = data.emailFound ? 'Yes' : 'No';
                 const edited = data.isEdited ? 'Yes' : 'No';
                 const regenerated = data.regenerateCount || 0;
+                const completed = (data.approved || data.rejected || data.dmSent) ? 'Yes' : 'No';
                 
-                csv += `"${data.username || ''}","${data.full_name || ''}","${data.follower_count || 0}","${emailFound}","${email}","${status}","${edited}","${regenerated}"\n`;
+                csv += `"${data.username || ''}","${data.full_name || ''}","${data.follower_count || 0}","${emailFound}","${email}","${status}","${edited}","${regenerated}","${completed}"\n`;
             });
 
             const blob = new Blob([csv], { type: 'text/csv' });
@@ -1271,6 +1844,44 @@
             window.URL.revokeObjectURL(url);
         }
 
+        // Retry all failed influencers
+        async function retryAllFailed() {
+            const failedIndices = [];
+            processedData.forEach((data, index) => {
+                if (data && data.error) {
+                    failedIndices.push(index);
+                }
+            });
+
+            if (failedIndices.length === 0) return;
+
+            // Clear error alerts
+            document.querySelectorAll('.error-summary-alert').forEach(el => el.remove());
+
+            // Show progress
+            document.getElementById('progressInfo').style.display = 'flex';
+            let completedCount = 0;
+
+            const updateRetryProgress = () => {
+                const percentage = (completedCount / failedIndices.length) * 100;
+                document.getElementById('progressFill').style.width = `${percentage}%`;
+                document.getElementById('progressText').textContent = 
+                    `Retrying ${completedCount} of ${failedIndices.length} failed URLs`;
+            };
+
+            updateRetryProgress();
+
+            // Retry each failed item
+            for (const index of failedIndices) {
+                await retryInfluencer(index);
+                completedCount++;
+                updateRetryProgress();
+            }
+
+            // Hide progress
+            document.getElementById('progressInfo').style.display = 'none';
+        }
+
         // Format number helper
         function formatNumber(num) {
             if (!num) return '0';
@@ -1282,6 +1893,33 @@
         // Initialize on load
         window.onload = function() {
             initializeInputs();
+            
+            // Add keyboard shortcuts
+            document.addEventListener('keydown', function(e) {
+                // Don't trigger shortcuts when typing in inputs or textareas
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+                
+                // Find the first pending item
+                const pendingIndex = processedData.findIndex(data => 
+                    data && !data.error && !data.approved && !data.rejected && !data.dmSent
+                );
+                
+                if (pendingIndex === -1) return;
+                
+                // Enter key - approve
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    const approveBtn = document.querySelector(`#row-${pendingIndex} .btn-approve-small:not(:disabled)`);
+                    if (approveBtn) approveBtn.click();
+                }
+                
+                // Delete key - reject
+                if (e.key === 'Delete') {
+                    e.preventDefault();
+                    const rejectBtn = document.querySelector(`#row-${pendingIndex} .btn-reject-small`);
+                    if (rejectBtn) rejectBtn.click();
+                }
+            });
         };
     </script>
 </body>
