@@ -1388,6 +1388,8 @@
                     } else {
                         tableWrapper.appendChild(duplicateAlert);
                     }
+                } else {
+                    console.error('Table wrapper not found for duplicate alert');
                 }
                 
                 // Remove alert after 5 seconds
@@ -1656,6 +1658,7 @@
             const tbody = document.getElementById('resultsTableBody');
             if (!tbody) {
                 // If table doesn't exist, create it
+                console.warn('Table body not found, creating new table');
                 initializeResultsTable(newUrls);
                 return;
             }
