@@ -69,75 +69,86 @@ function showStatus(message, type) {
 
 function displayResults(data) {
     const resultsDiv = document.getElementById('results');
+    const table = document.createElement('table');
+    table.className = 'results-table';
     
-    resultsDiv.innerHTML = `
-        <div class="influencer-card">
-            <div class="profile-header">
-                <img src="${data.profile_pic_url}" alt="${data.username}" class="profile-pic">
-                <div>
-                    <h2>${data.full_name || data.username}</h2>
-                    <p>@${data.username}</p>
-                </div>
-            </div>
-            
-            <div class="stats">
-                <div class="stat">
-                    <div class="stat-value">${formatNumber(data.follower_count)}</div>
-                    <div>Followers</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-value">${formatNumber(data.following_count)}</div>
-                    <div>Following</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-value">${data.engagement_rate}%</div>
-                    <div>Engagement</div>
-                </div>
-            </div>
-            
-            ${data.biography ? `
-            <div class="section">
-                <h3>Bio</h3>
-                <p>${data.biography}</p>
-            </div>
-            ` : ''}
-            
-            ${data.recent_posts ? `
-            <div class="section">
-                <h3>Recent Posts</h3>
-                <div class="posts-grid">
-                    ${data.recent_posts.map(url => `
-                        <img src="${url}" class="post-thumb" onclick="window.open('${url}', '_blank')">
-                    `).join('')}
-                </div>
-            </div>
-            ` : ''}
-            
-            ${data.ai_analysis ? `
-            <div class="section">
-                <h3>AI Analysis</h3>
-                <p>${data.ai_analysis}</p>
-            </div>
-            ` : ''}
-            
-            ${data.outreach_email ? `
-            <div class="section">
-                <h3>Generated Email</h3>
-                <p>${data.outreach_email.replace(/\n/g, '<br>')}</p>
-            </div>
-            ` : ''}
-            
-            <div class="action-buttons">
-                <button class="btn-approve" onclick="approveInfluencer('${data.username}')">
-                    Approve & Send to Instantly
-                </button>
-                <button class="btn-reject" onclick="rejectInfluencer('${data.username}')">
-                    Reject
-                </button>
-            </div>
+    // Create table header
+    const thead = document.createElement('thead');
+    thead.innerHTML = `
+        <tr>
+            <th>Profile</th>
+            <th>Generated Email</th>
+            <th>Actions</th>
+        </tr>
+    `;
+    table.appendChild(thead);
+    
+    // Create table body
+    const tbody = document.createElement('tbody');
+    
+    // Create row for each influencer
+    const row = document.createElement('tr');
+    
+    // Profile column
+    const profileCell = document.createElement('td');
+    profileCell.innerHTML = `
+        <div class="profile-info">
+            <div class="username">@${data.username}</div>
+            <div class="followers">${formatNumber(data.follower_count)} followers</div>
         </div>
     `;
+    row.appendChild(profileCell);
     
+    // Email column
+    const emailCell = document.createElement('td');
+    if (data.error) {
+        emailCell.innerHTML = `
+            <div class="error-message">${data.error}</div>
+        `;
+    } else if (data.outreach_email) {
+        emailCell.innerHTML = `
+            <div class="email-content">${data.outreach_email.replace(/\n/g, '<br>')}</div>
+        `;
+    } else {
+        emailCell.innerHTML = `
+            <div class="email-content">No email found - Use Instagram DM</div>
+        `;
+    }
+    row.appendChild(emailCell);
+    
+    // Actions column
+    const actionsCell = document.createElement('td');
+    actionsCell.innerHTML = `
+        <div class="action-buttons">
+            ${data.outreach_email ? `
+                <button class="action-btn btn-copy" onclick="copyToClipboard('${data.username}')">
+                    Copy Message
+                </button>
+                <button class="action-btn btn-edit" onclick="editEmail('${data.username}')">
+                    Edit
+                </button>
+                <button class="action-btn btn-regenerate" onclick="regenerateEmail('${data.username}')">
+                    Regenerate
+                </button>
+            ` : ''}
+            <button class="action-btn btn-instagram" onclick="openInstagram('${data.username}')">
+                Open Instagram
+            </button>
+            <button class="action-btn btn-reject" onclick="rejectInfluencer('${data.username}')">
+                Reject
+            </button>
+        </div>
+    `;
+    row.appendChild(actionsCell);
+    
+    tbody.appendChild(row);
+    table.appendChild(tbody);
+    
+    // Clear previous results and append new table
+    resultsDiv.innerHTML = '';
+    resultsDiv.appendChild(table);
+    
+    // Show success status
     showStatus('Analysis complete!', 'success');
 }
 
@@ -155,4 +166,27 @@ function approveInfluencer(username) {
 
 function rejectInfluencer(username) {
     alert(`Rejected ${username}`);
+}
+
+function copyToClipboard(username) {
+    const emailContent = document.querySelector(`tr:has(.username:contains('@${username}')) .email-content`).textContent;
+    navigator.clipboard.writeText(emailContent).then(() => {
+        showStatus('Email copied to clipboard!', 'success');
+    }).catch(() => {
+        showStatus('Failed to copy email', 'error');
+    });
+}
+
+function editEmail(username) {
+    // Implement email editing functionality
+    showStatus('Email editing coming soon!', 'info');
+}
+
+function regenerateEmail(username) {
+    // Implement email regeneration functionality
+    showStatus('Email regeneration coming soon!', 'info');
+}
+
+function openInstagram(username) {
+    window.open(`https://www.instagram.com/${username}`, '_blank');
 }

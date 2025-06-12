@@ -159,13 +159,13 @@
             padding: 30px;
             border-radius: 16px;
             box-shadow: 0 2px 20px rgba(0,0,0,0.08);
-            display: none;
+            margin-top: 30px;
         }
 
         .results-header {
             display: flex;
-            align-items: center;
             justify-content: space-between;
+            align-items: center;
             margin-bottom: 20px;
             flex-wrap: wrap;
             gap: 15px;
@@ -178,12 +178,17 @@
             flex: 1;
         }
 
+        .header-right {
+            display: flex;
+            gap: 12px;
+        }
+
         .progress-stats {
             display: flex;
             align-items: center;
             gap: 12px;
             padding: 8px 16px;
-            background: #f0f0f0;
+            background: #f8f9fa;
             border-radius: 20px;
             font-size: 14px;
         }
@@ -223,7 +228,7 @@
             border-collapse: collapse;
             margin-top: 20px;
             position: relative;
-            table-layout: fixed; /* Prevent column shifting */
+            table-layout: fixed;
         }
 
         .results-table th {
@@ -240,57 +245,134 @@
         }
 
         .results-table th:first-child {
-            padding-left: 30px;
+            width: 20%;
+        }
+
+        .results-table th:nth-child(2) {
+            width: 50%;
+        }
+
+        .results-table th:last-child {
+            width: 30%;
         }
 
         .results-table td {
             padding: 16px;
             border-bottom: 1px solid #f0f0f0;
-            vertical-align: middle;
+            vertical-align: top;
+            word-wrap: break-word;
         }
 
-        .results-table td:first-child {
-            padding-left: 30px; /* Consistent padding for all rows */
-        }
-
-        .results-table tr {
-            position: relative;
-        }
-
-        .results-table tr:hover {
-            background: #f8f9fa;
-        }
-
-        .profile-cell {
+        .profile-info {
             display: flex;
-            align-items: center;
-            gap: 12px;
-            position: relative;
+            flex-direction: column;
+            gap: 8px;
         }
 
-        .profile-pic-small {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            object-fit: cover;
-            flex-shrink: 0;
-        }
-
-        .profile-info-small {
-            line-height: 1.4;
-        }
-
-        .username-small {
+        .username {
             font-weight: 600;
             color: #333;
-            display: flex;
-            align-items: center;
-            gap: 4px;
         }
 
-        .followers-small {
+        .followers {
             font-size: 13px;
             color: #666;
+        }
+
+        .email-content {
+            white-space: pre-wrap;
+            font-size: 14px;
+            line-height: 1.5;
+            color: #333;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+
+        .btn-copy {
+            background: #e9ecef;
+            color: #495057;
+        }
+
+        .btn-copy:hover {
+            background: #dee2e6;
+        }
+
+        .btn-edit {
+            background: #cff4fc;
+            color: #055160;
+        }
+
+        .btn-edit:hover {
+            background: #b6effb;
+        }
+
+        .btn-regenerate {
+            background: #fff3cd;
+            color: #664d03;
+        }
+
+        .btn-regenerate:hover {
+            background: #ffecb5;
+        }
+
+        .btn-instagram {
+            background: #d1e7dd;
+            color: #0f5132;
+        }
+
+        .btn-instagram:hover {
+            background: #c3e6cb;
+        }
+
+        .btn-reject {
+            background: #f8d7da;
+            color: #842029;
+        }
+
+        .btn-reject:hover {
+            background: #f5c2c7;
+        }
+
+        .error-message {
+            color: #dc3545;
+            font-size: 13px;
+            margin-top: 4px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-success {
+            background: #d1e7dd;
+            color: #0f5132;
+        }
+
+        .status-error {
+            background: #f8d7da;
+            color: #842029;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #664d03;
         }
 
         /* Email Display and Editing */
@@ -753,23 +835,45 @@
 
         /* Export Button */
         .btn-export {
-            background: #17a2b8;
+            background: #28a745;
             color: white;
             border: none;
-            padding: 12px 24px;
-            border-radius: 10px;
+            padding: 10px 20px;
+            border-radius: 8px;
             font-size: 14px;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.2s;
         }
 
-        .btn-export:hover:not(:disabled) {
-            background: #138496;
+        .btn-export:hover {
+            background: #218838;
         }
 
-        .btn-export:disabled {
-            background: #6c757d;
-            cursor: not-allowed;
+        .btn-retry {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-retry:hover {
+            background: #c82333;
+        }
+
+        .error-count {
+            background: #f8d7da;
+            color: #842029;
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         /* Progress indicator */
@@ -909,37 +1013,31 @@
             </div>
         </div>
 
-        <div class="results-section" id="resultsSection">
-            <div class="progress-info" id="progressInfo">
-                <span class="progress-text" id="progressText">Processing...</span>
-                <div class="progress-bar">
-                    <div class="progress-fill" id="progressFill"></div>
-                </div>
-            </div>
-
+        <div class="results-section" id="results">
             <div class="results-header">
                 <div class="header-left">
-                    <h2 class="section-title">
-                        <span>✉️</span>
-                        <span>Generated Emails</span>
-                    </h2>
-                    <div class="progress-stats" id="progressStats" style="display: none;">
-                        <span id="progressText">0 of 0 completed</span>
+                    <div class="progress-stats">
+                        <span>✉️ Generated Emails</span>
                         <div class="progress-mini">
-                            <div class="progress-mini-fill" id="progressMiniFill"></div>
+                            <div class="progress-mini-fill" style="width: 0%"></div>
                         </div>
+                        <span id="progress-count">0 of 0 completed</span>
                     </div>
-                    <button class="toggle-completed" id="toggleCompleted" onclick="toggleCompletedVisibility()" style="display: none;">
-                        Hide Completed
+                    <button class="toggle-completed" onclick="toggleCompleted()">
+                        Show Completed
                     </button>
                 </div>
-                <button class="btn-export" onclick="exportResults()" id="exportBtn" disabled>
-                    Export to CSV
-                </button>
+                <div class="header-right">
+                    <button class="btn-export" onclick="exportToCSV()">
+                        Export to CSV
+                    </button>
+                    <button class="btn-retry" onclick="retryFailed()">
+                        Retry All Failed
+                    </button>
+                </div>
             </div>
-            
-            <div id="resultsContent" style="overflow-x: auto; position: relative;">
-                <!-- Results will be displayed here -->
+            <div id="error-count" class="error-count" style="display: none;">
+                ❌ <span id="failed-count">0</span> URL failed to process
             </div>
         </div>
     </div>
@@ -1899,7 +1997,7 @@
         }
 
         // Export results to CSV
-        function exportResults() {
+        function exportToCSV() {
             const validResults = processedData.filter(data => data && !data.error);
             
             if (validResults.length === 0) {
