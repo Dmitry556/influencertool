@@ -230,10 +230,9 @@
             border-color: #6c757d;
         }
 
-        /* Clear column definitions with borders for debugging */
+        /* Clean table styles without debug colors */
         .results-table {
             width: 100%;
-            border: 2px solid #007bff;
             border-collapse: separate;
             border-spacing: 0;
             margin: 0;
@@ -242,37 +241,58 @@
             background: white;
         }
 
-        .results-table th,
+        .results-table th {
+            background: #f8f9fa;
+            padding: 16px;
+            text-align: left;
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            border-bottom: 2px solid #dee2e6;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            white-space: nowrap;
+        }
+
+        /* Force proper table cell isolation */
         .results-table td {
-            border: 1px solid #dee2e6 !important;
-            padding: 16px !important;
-            text-align: left !important;
+            padding: 16px;
+            border-bottom: 1px solid #f0f0f0;
+            vertical-align: top;
+            background: white;
+            position: relative;
+            overflow: hidden;
+            isolation: isolate;
         }
 
-        /* Column 1: Profile - Light blue background */
-        .results-table th:nth-child(1),
+        /* Ensure each cell content is contained */
         .results-table td:nth-child(1) {
-            width: 280px !important;
-            min-width: 280px !important;
-            max-width: 280px !important;
-            background: #f0f8ff !important;
+            width: 280px;
+            min-width: 280px;
+            max-width: 280px;
+            background: #fafbfc;
         }
 
-        /* Column 2: Email - Light green background */
-        .results-table th:nth-child(2),
         .results-table td:nth-child(2) {
-            width: auto !important;
-            min-width: 400px !important;
-            background: #f0fff0 !important;
+            width: auto;
+            min-width: 400px;
+            position: relative;
+            z-index: 1;
         }
 
-        /* Column 3: Actions - Light yellow background */
-        .results-table th:nth-child(3),
         .results-table td:nth-child(3) {
-            width: 380px !important;
-            min-width: 380px !important;
-            max-width: 380px !important;
-            background: #fffff0 !important;
+            width: 380px;
+            min-width: 380px;
+            max-width: 380px;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Ensure content stays within columns */
+        .results-table td > * {
+            max-width: 100%;
+            overflow: hidden;
         }
         .table-wrapper {
             overflow-x: auto;
@@ -375,9 +395,7 @@
         }
         
         .profile-cell {
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            display: block;
             position: relative;
             min-width: 0;
             width: 100%;
@@ -419,21 +437,36 @@
             white-space: nowrap;
         }
 
-        /* Email Display and Editing */
+        /* Email Display and Editing - Strict containment */
         .email-cell-wrapper {
             width: 100%;
             max-width: 100%;
-            overflow: hidden;
             position: relative;
             word-break: break-word;
+            display: block;
+            overflow: hidden;
         }
 
         .email-container {
             position: relative;
             width: 100%;
             max-width: 100%;
-            overflow: hidden;
-            contain: layout style;
+            display: block;
+        }
+
+        /* Ensure no-email-notice stays in place */
+        .no-email-notice {
+            color: #856404;
+            background: #fff3cd;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            display: block;
+            margin-bottom: 8px;
+            width: fit-content;
+            max-width: 100%;
+            position: relative;
+            z-index: 1;
         }
 
         .email-display {
@@ -447,7 +480,6 @@
             word-break: break-word;
             overflow-wrap: break-word;
             white-space: pre-line;
-            white-space: pre-wrap;
             max-width: 100%;
             display: block;
             overflow: hidden;
@@ -532,13 +564,31 @@
             background: #5a6268;
         }
 
-        /* Action Buttons */
+        .no-email-notice {
+            color: #856404;
+            background: #fff3cd;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            display: block;
+            margin-bottom: 8px;
+            max-width: 100%;
+            width: fit-content;
+        }
+
+        /* Action Buttons - Strict containment */
         .action-cell {
             display: flex;
             gap: 6px;
             flex-wrap: wrap;
-            align-items: center;
+            align-items: flex-start;
+            justify-content: flex-start;
             max-width: 100%;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+            padding: 0;
+            margin: 0;
         }
 
         /* Button hover states with transform */
@@ -1046,17 +1096,6 @@
             max-width: 100%;
             -webkit-overflow-scrolling: touch;
             position: relative;
-        }
-
-        .no-email-notice {
-            color: #856404;
-            background: #fff3cd;
-            padding: 6px 12px;
-            border-radius: 4px;
-            font-size: 12px;
-            display: inline-block;
-            margin-bottom: 8px;
-            max-width: 100%;
         }
 
         /* Quick action buttons for productivity */
