@@ -266,27 +266,28 @@
             isolation: isolate;
         }
 
-        /* Ensure each cell content is contained */
+        /* Debug: Add borders to see what's happening */
+        .results-table td {
+            border: 1px solid #dee2e6 !important;
+        }
+        
+        /* Force column widths with !important */
         .results-table td:nth-child(1) {
-            width: 280px;
-            min-width: 280px;
-            max-width: 280px;
-            background: #fafbfc;
+            width: 280px !important;
+            max-width: 280px !important;
+            overflow: hidden !important;
         }
-
+        
         .results-table td:nth-child(2) {
-            width: auto;
-            min-width: 400px;
-            position: relative;
-            z-index: 1;
+            width: auto !important;
+            min-width: 400px !important;
+            overflow: hidden !important;
         }
-
+        
         .results-table td:nth-child(3) {
-            width: 380px;
-            min-width: 380px;
-            max-width: 380px;
-            position: relative;
-            z-index: 2;
+            width: 380px !important;
+            max-width: 380px !important;
+            overflow: hidden !important;
         }
 
         /* Ensure content stays within columns */
@@ -437,36 +438,23 @@
             white-space: nowrap;
         }
 
-        /* Email Display and Editing - Strict containment */
-        .email-cell-wrapper {
-            width: 100%;
-            max-width: 100%;
-            position: relative;
-            word-break: break-word;
-            display: block;
-            overflow: hidden;
-        }
-
-        .email-container {
-            position: relative;
-            width: 100%;
-            max-width: 100%;
-            display: block;
-        }
-
-        /* Ensure no-email-notice stays in place */
+        /* Simplified no-email-notice */
         .no-email-notice {
             color: #856404;
             background: #fff3cd;
             padding: 6px 12px;
             border-radius: 4px;
             font-size: 12px;
-            display: block;
             margin-bottom: 8px;
-            width: fit-content;
-            max-width: 100%;
-            position: relative;
-            z-index: 1;
+        }
+
+        /* Email cell wrapper - remove all special properties */
+        .email-cell-wrapper {
+            width: 100%;
+        }
+
+        .email-container {
+            width: 100%;
         }
 
         .email-display {
@@ -476,19 +464,20 @@
             cursor: pointer;
             padding: 8px;
             border-radius: 6px;
-            transition: background 0.2s;
-            word-break: break-word;
-            overflow-wrap: break-word;
-            white-space: pre-line;
-            max-width: 100%;
-            display: block;
-            overflow: hidden;
-            box-sizing: border-box;
+            background: white;
+            border: 1px solid #e0e0e0;
+            margin-top: 8px;
         }
 
         .email-display:hover {
-            background: #f0f0f0;
-            cursor: text;
+            background: #f8f9fa;
+        }
+
+        /* Action cell - simple flex */
+        .action-cell {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
         }
 
         .email-display.edited {
@@ -604,6 +593,15 @@
             flex-shrink: 0;
             line-height: 1.4;
             transform: translateY(0);
+            min-width: 70px; /* Ensure consistent button widths */
+            text-align: center;
+        }
+
+        /* Make Instagram button same width as Approve button */
+        .btn-instagram-small {
+            background: #E1306C;
+            color: white;
+            min-width: 120px; /* Match the Approve button width */
         }
 
         .btn-small:hover:not(:disabled) {
