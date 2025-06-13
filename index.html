@@ -230,13 +230,73 @@
             border-color: #6c757d;
         }
 
+        /* Clear column definitions with borders for debugging */
         .results-table {
             width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
+            border: 2px solid #007bff;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: 0;
             position: relative;
-            table-layout: fixed; /* Prevent column shifting */
+            table-layout: fixed;
             background: white;
+        }
+
+        .results-table th,
+        .results-table td {
+            border: 1px solid #dee2e6 !important;
+            padding: 16px !important;
+            text-align: left !important;
+        }
+
+        /* Column 1: Profile - Light blue background */
+        .results-table th:nth-child(1),
+        .results-table td:nth-child(1) {
+            width: 280px !important;
+            min-width: 280px !important;
+            max-width: 280px !important;
+            background: #f0f8ff !important;
+        }
+
+        /* Column 2: Email - Light green background */
+        .results-table th:nth-child(2),
+        .results-table td:nth-child(2) {
+            width: auto !important;
+            min-width: 400px !important;
+            background: #f0fff0 !important;
+        }
+
+        /* Column 3: Actions - Light yellow background */
+        .results-table th:nth-child(3),
+        .results-table td:nth-child(3) {
+            width: 380px !important;
+            min-width: 380px !important;
+            max-width: 380px !important;
+            background: #fffff0 !important;
+        }
+        .table-wrapper {
+            overflow-x: auto;
+            overflow-y: visible;
+            max-width: 100%;
+            -webkit-overflow-scrolling: touch;
+            position: relative;
+            background: white;
+            border-radius: 8px;
+            padding: 0;
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: 0;
+            position: relative;
+            table-layout: fixed;
+            background: white;
+        }
+
+        .results-table thead {
+            background: #f8f9fa;
         }
 
         .results-table th {
@@ -245,12 +305,13 @@
             text-align: left;
             font-size: 14px;
             font-weight: 600;
-            color: #666;
-            border-bottom: 2px solid #e0e0e0;
-            border-right: 1px solid #e0e0e0;
+            color: #333;
+            border-bottom: 2px solid #dee2e6;
+            border-right: 1px solid #dee2e6;
             position: sticky;
             top: 0;
             z-index: 10;
+            white-space: nowrap;
         }
 
         .results-table th:last-child {
@@ -258,20 +319,18 @@
         }
 
         .results-table th:nth-child(1) {
-            width: 250px;
-            min-width: 250px;
-            max-width: 250px;
+            width: 280px;
+            min-width: 280px;
         }
 
         .results-table th:nth-child(2) {
-            width: auto;
+            width: calc(100% - 660px);
             min-width: 400px;
         }
 
         .results-table th:nth-child(3) {
             width: 380px;
             min-width: 380px;
-            max-width: 380px;
         }
 
         .results-table td {
@@ -279,10 +338,26 @@
             border-bottom: 1px solid #f0f0f0;
             border-right: 1px solid #f0f0f0;
             vertical-align: top;
+            background: white;
         }
 
         .results-table td:last-child {
             border-right: none;
+        }
+
+        .results-table td:nth-child(1) {
+            width: 280px;
+            min-width: 280px;
+        }
+
+        .results-table td:nth-child(2) {
+            width: calc(100% - 660px);
+            min-width: 400px;
+        }
+
+        .results-table td:nth-child(3) {
+            width: 380px;
+            min-width: 380px;
         }
 
         .results-table tr {
@@ -294,12 +369,18 @@
             background: #f8f9fa;
         }
 
+        /* Profile column specific styles */
+        .results-table td:nth-child(1) {
+            background: #fafbfc;
+        }
+        
         .profile-cell {
             display: flex;
             align-items: center;
             gap: 8px;
             position: relative;
             min-width: 0;
+            width: 100%;
         }
 
         .profile-info-small {
@@ -805,17 +886,24 @@
         }
 
         #resultsContent {
-            overflow-x: auto;
             position: relative;
             max-width: 100%;
+            margin: 0;
+            padding: 0;
         }
 
-        .results-table, .results-table * {
+        .results-table * {
             box-sizing: border-box;
         }
 
         .results-table {
             display: table;
+            width: 100%;
+            table-layout: fixed;
+        }
+
+        .results-table thead {
+            display: table-header-group;
         }
 
         .results-table tbody {
@@ -1010,20 +1098,31 @@
                 grid-template-columns: 1fr;
             }
             
+            .table-wrapper {
+                overflow-x: scroll;
+            }
+            
             .results-table {
                 font-size: 12px;
-                min-width: 600px;
+                min-width: 800px;
             }
             
-            .results-table td:first-child {
-                width: 150px;
-                min-width: 150px;
-                font-size: 11px;
+            .results-table th:nth-child(1),
+            .results-table td:nth-child(1) {
+                width: 200px;
+                min-width: 200px;
             }
             
+            .results-table th:nth-child(2),
+            .results-table td:nth-child(2) {
+                width: 350px;
+                min-width: 350px;
+            }
+            
+            .results-table th:nth-child(3),
             .results-table td:nth-child(3) {
-                width: 280px;
-                min-width: 280px;
+                width: 250px;
+                min-width: 250px;
             }
             
             .email-display {
