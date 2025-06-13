@@ -1095,9 +1095,7 @@
             </div>
             
             <div id="resultsContent">
-                <div class="table-wrapper">
-                    <!-- Results will be displayed here -->
-                </div>
+                <!-- Results will be displayed here -->
             </div>
         </div>
     </div>
@@ -1108,6 +1106,14 @@
         let currentProcessing = false;
         let hideCompleted = false;
         let approvalStreak = 0; // Not currently used but ready for gamification
+
+        // Helper function to escape HTML
+        function escapeHtml(str) {
+            if (!str) return '';
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
 
         // Show success notification
         function showSuccessNotification(message) {
@@ -1650,6 +1656,7 @@
                 </table>
             `;
 
+            // Fix: Create the table-wrapper div and add the table
             resultsContent.innerHTML = `<div class="table-wrapper">${tableHTML}</div>`;
         }
 
@@ -1743,7 +1750,7 @@
                         ${!data.emailFound ? '<div class="no-email-notice">📧 No email found - Use Instagram DM</div>' : ''}
                         <div class="email-container" id="email-container-${index}">
                             <div class="email-display ${isEdited ? 'edited' : ''}" id="email-display-${index}" onclick="startEditEmail(${index})">
-                                ${emailToShow.replace(/\n/g, '<br>')}
+                                ${escapeHtml(emailToShow).replace(/\n/g, '<br>')}
                                 ${isEdited ? '<span class="edited-badge">Edited</span>' : ''}
                             </div>
                             <div class="email-editor" id="email-editor-${index}">
@@ -2090,8 +2097,18 @@
             const data = processedData[index];
             if (!data) return;
 
+            const row = document.getElementById(`row-${index}`);
+            
+            // Mark as rejected in data
+            data.rejected = true;
+            
+            // Update UI
             document.getElementById(`actions-${index}`).innerHTML = 
                 '<span class="status-badge status-rejected">✗ Rejected</span>';
+                
+            // Mark row as completed
+            row.classList.add('row-completed');
+            updateCompletionStats();
         }
 
         // Export results to CSV
