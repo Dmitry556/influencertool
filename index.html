@@ -1947,10 +1947,27 @@
                     if (response.status === 200) {
                         const data = await response.json();
                         
-                        // Check if we have valid data
-                        if (data && data.username) {
-                            console.log(`Success for ${analysisId}:`, data.username);
-                            return data;
+                        // Check if we have valid data - Clay returns with capital letters
+                        if (data && (data.username || data.Username)) {
+                            console.log(`Success for ${analysisId}:`, data.Username || data.username);
+                            
+                            // Map Clay's field names to what our code expects
+                            const mappedData = {
+                                username: data.Username || data.username,
+                                full_name: data['Full Name'] || data.full_name,
+                                outreach_email: data['Email Body'] || data.outreach_email,
+                                follower_count: data['Followers Count'] || data.follower_count,
+                                following_count: data['Follows Count'] || data.following_count || data.follows_count,
+                                posts_count: data['Posts Count'] || data.posts_count,
+                                biography: data.Biography || data.biography,
+                                profile_pic_url: data['Profile Pic Url'] || data.profile_pic_url,
+                                is_verified: data.Verified !== undefined ? data.Verified : data.is_verified,
+                                email_found: data['Email Found'] || data.email_found,
+                                // Keep any other fields that might exist
+                                ...data
+                            };
+                            
+                            return mappedData;
                         }
                     } else if (response.status === 202) {
                         // Still pending, continue polling
@@ -1969,6 +1986,7 @@
             console.error(`Timeout for ${analysisId} after ${maxAttempts} attempts (${totalSeconds} seconds)`);
             throw new Error(`Request timed out after ${totalSeconds} seconds. Clay may be experiencing delays.`);
         }
+                    
 
         // Copy email to clipboard
         async function copyEmail(index, buttonElement) {
