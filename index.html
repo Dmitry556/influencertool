@@ -303,6 +303,15 @@
             overflow: hidden;
         }
 
+        .profile-info-small .email-address {
+            font-size: 12px;
+            color: #17a2b8;
+            margin-top: 2px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
         .username-small {
             font-weight: 600;
             color: #333;
@@ -1575,7 +1584,8 @@
                     ...result, 
                     original_url: url, 
                     success: true,
-                    emailFound: emailFound
+                    emailFound: emailFound,
+                    email_found: result.email_found // Keep the original email address
                 };
                 
             } catch (error) {
@@ -1730,21 +1740,32 @@
             // Success case
             const emailToShow = data.editedEmail || data.outreach_email || 'No email generated';
             const isEdited = data.isEdited;
+            
+            // Display email address if found
+            const emailAddress = data.email_found && data.email_found !== 'no_email' && data.email_found !== '' && data.email_found !== 'null' 
+                ? data.email_found 
+                : null;
 
             row.className = 'result-row';
             row.setAttribute('data-index', index);
-            row.innerHTML = `
+            
+            // Build HTML with proper formatting
+            let profileHTML = `
                 <td>
                     <div class="profile-cell">
                         <div class="profile-info-small">
                             <div class="username-small">
-                                @${data.username}
+                                @${escapeHtml(data.username || '')}
                                 ${data.is_verified ? '<span style="color: #007bff;">✓</span>' : ''}
                             </div>
                             <div class="followers-small">${formatNumber(data.follower_count)} followers</div>
+                            ${emailAddress ? `<div class="followers-small" style="color: #17a2b8;">📧 ${escapeHtml(emailAddress)}</div>` : ''}
                         </div>
                     </div>
                 </td>
+            `;
+            
+            let emailHTML = `
                 <td class="email-column">
                     <div class="email-cell-wrapper">
                         ${!data.emailFound ? '<div class="no-email-notice">📧 No email found - Use Instagram DM</div>' : ''}
@@ -1753,7 +1774,7 @@
                                 ${escapeHtml(emailToShow).replace(/\n/g, '<br>')}
                                 ${isEdited ? '<span class="edited-badge">Edited</span>' : ''}
                             </div>
-                            <div class="email-editor" id="email-editor-${index}">
+                            <div class="email-editor" id="email-editor-${index}" style="display: none;">
                                 <textarea class="email-textarea" id="email-textarea-${index}">${emailToShow}</textarea>
                                 <div class="editor-actions">
                                     <button class="btn-save" onclick="saveEmail(${index})">Save</button>
@@ -1763,6 +1784,9 @@
                         </div>
                     </div>
                 </td>
+            `;
+            
+            let actionsHTML = `
                 <td>
                     <div class="action-cell" id="actions-${index}">
                         <button class="btn-small btn-copy-small" onclick="copyEmail(${index}, this)">
@@ -1774,21 +1798,32 @@
                         <button class="btn-small btn-regenerate-small" onclick="regenerateEmail(${index})" ${data.regenerateCount >= 3 ? 'disabled' : ''}>
                             Regenerate${data.regenerateCount > 0 ? `<span class="regenerate-count">${data.regenerateCount}x</span>` : ''}
                         </button>
-                        ${data.emailFound ? `
-                            <button class="btn-small btn-approve-small" onclick="approveInfluencer(${index})">
-                                Approve
-                            </button>
-                        ` : `
-                            <button class="btn-small btn-instagram-small" onclick="openInstagram(${index})">
-                                Open Instagram
-                            </button>
-                        `}
+            `;
+            
+            if (data.emailFound) {
+                actionsHTML += `
+                        <button class="btn-small btn-approve-small" onclick="approveInfluencer(${index})">
+                            Approve
+                        </button>
+                `;
+            } else {
+                actionsHTML += `
+                        <button class="btn-small btn-instagram-small" onclick="openInstagram(${index})">
+                            Open Instagram
+                        </button>
+                `;
+            }
+            
+            actionsHTML += `
                         <button class="btn-small btn-reject-small" onclick="rejectInfluencer(${index})">
                             Reject
                         </button>
                     </div>
                 </td>
             `;
+            
+            // Set the complete HTML
+            row.innerHTML = profileHTML + emailHTML + actionsHTML;
         }
 
         // Start editing email
@@ -1962,7 +1997,7 @@
                                 biography: data.Biography || data.biography,
                                 profile_pic_url: data['Profile Pic Url'] || data.profile_pic_url,
                                 is_verified: data.Verified !== undefined ? data.Verified : data.is_verified,
-                                email_found: data['Email Found'] || data.email_found,
+                                email_found: data['Email Found'] || data.email_found || data['Email'] || data.email,
                                 // Keep any other fields that might exist
                                 ...data
                             };
