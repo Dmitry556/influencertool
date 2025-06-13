@@ -236,6 +236,7 @@
             margin-top: 20px;
             position: relative;
             table-layout: fixed; /* Prevent column shifting */
+            background: white;
         }
 
         .results-table th {
@@ -246,21 +247,25 @@
             font-weight: 600;
             color: #666;
             border-bottom: 2px solid #e0e0e0;
+            border-right: 1px solid #e0e0e0;
             position: sticky;
             top: 0;
             z-index: 10;
         }
 
+        .results-table th:last-child {
+            border-right: none;
+        }
+
         .results-table th:nth-child(1) {
-            width: 200px;
-            min-width: 200px;
-            max-width: 200px;
-            padding-left: 30px;
+            width: 250px;
+            min-width: 250px;
+            max-width: 250px;
         }
 
         .results-table th:nth-child(2) {
             width: auto;
-            min-width: 300px;
+            min-width: 400px;
         }
 
         .results-table th:nth-child(3) {
@@ -272,11 +277,12 @@
         .results-table td {
             padding: 16px;
             border-bottom: 1px solid #f0f0f0;
-            vertical-align: middle;
+            border-right: 1px solid #f0f0f0;
+            vertical-align: top;
         }
 
-        .results-table td:first-child {
-            padding-left: 30px; /* Consistent padding for all rows */
+        .results-table td:last-child {
+            border-right: none;
         }
 
         .results-table tr {
@@ -1624,15 +1630,16 @@
             const resultsContent = document.getElementById('resultsContent');
             
             let tableHTML = `
-                <table class="results-table">
-                    <thead>
-                        <tr>
-                            <th>Profile</th>
-                            <th>Generated Email</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="resultsTableBody">
+                <div class="table-wrapper">
+                    <table class="results-table">
+                        <thead>
+                            <tr>
+                                <th>Profile</th>
+                                <th>Generated Email</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="resultsTableBody">
             `;
 
             urls.forEach(({ url, index }) => {
@@ -1650,9 +1657,7 @@
                             </div>
                         </td>
                         <td>
-                            <div style="max-width: 100%; overflow: hidden;">
-                                <div class="loading-text-skeleton"></div>
-                            </div>
+                            <div class="loading-text-skeleton"></div>
                         </td>
                         <td>
                             <div class="spinner-small"></div>
@@ -1662,12 +1667,12 @@
             });
 
             tableHTML += `
-                    </tbody>
-                </table>
+                        </tbody>
+                    </table>
+                </div>
             `;
 
-            // Fix: Create the table-wrapper div and add the table
-            resultsContent.innerHTML = `<div class="table-wrapper">${tableHTML}</div>`;
+            resultsContent.innerHTML = tableHTML;
         }
 
         // Add new rows to existing table
@@ -1718,15 +1723,13 @@
                     <td>
                         <div class="profile-cell">
                             <div class="profile-info-small">
-                                <div class="username-small">@${data.username}</div>
-                                <div class="followers-small">Error: ${data.error_message || 'Failed to process'}</div>
+                                <div class="username-small">@${escapeHtml(data.username || '')}</div>
+                                <div class="followers-small">Error: ${escapeHtml(data.error_message || 'Failed to process')}</div>
                             </div>
                         </div>
                     </td>
-                    <td style="color: #999;">
-                        <div style="max-width: 100%; overflow: hidden;">
-                            <em>No email generated - ${data.error_message || 'Processing failed'}</em>
-                        </div>
+                    <td>
+                        <em style="color: #999;">No email generated - ${escapeHtml(data.error_message || 'Processing failed')}</em>
                     </td>
                     <td>
                         <button class="btn-small btn-reject-small" onclick="retryInfluencer(${index})">
@@ -1739,91 +1742,98 @@
 
             // Success case
             const emailToShow = data.editedEmail || data.outreach_email || 'No email generated';
-            const isEdited = data.isEdited;
+            const isEdited = data.isEdited || false;
             
-            // Display email address if found
-            const emailAddress = data.email_found && data.email_found !== 'no_email' && data.email_found !== '' && data.email_found !== 'null' 
-                ? data.email_found 
-                : null;
+            // Check if email address was found
+            const emailAddress = data.email_found && 
+                               data.email_found !== 'no_email' && 
+                               data.email_found !== '' && 
+                               data.email_found !== 'null' 
+                               ? data.email_found 
+                               : null;
 
             row.className = 'result-row';
             row.setAttribute('data-index', index);
             
-            // Build HTML with proper formatting
-            let profileHTML = `
-                <td>
-                    <div class="profile-cell">
-                        <div class="profile-info-small">
-                            <div class="username-small">
-                                @${escapeHtml(data.username || '')}
-                                ${data.is_verified ? '<span style="color: #007bff;">✓</span>' : ''}
+            // Clear the row and rebuild it
+            row.innerHTML = '';
+            
+            // Column 1: Profile
+            const profileTd = document.createElement('td');
+            profileTd.innerHTML = `
+                <div class="profile-cell">
+                    <div class="profile-info-small">
+                        <div class="username-small">
+                            @${escapeHtml(data.username || '')}
+                            ${data.is_verified ? '<span style="color: #007bff;">✓</span>' : ''}
+                        </div>
+                        <div class="followers-small">${formatNumber(data.follower_count || 0)} followers</div>
+                        ${emailAddress ? `<div class="email-address">📧 ${escapeHtml(emailAddress)}</div>` : ''}
+                    </div>
+                </div>
+            `;
+            row.appendChild(profileTd);
+            
+            // Column 2: Email
+            const emailTd = document.createElement('td');
+            emailTd.innerHTML = `
+                <div class="email-cell-wrapper">
+                    ${!data.emailFound ? '<div class="no-email-notice">📧 No email found - Use Instagram DM</div>' : ''}
+                    <div class="email-container" id="email-container-${index}">
+                        <div class="email-display ${isEdited ? 'edited' : ''}" id="email-display-${index}" onclick="startEditEmail(${index})">
+                            ${escapeHtml(emailToShow).replace(/\n/g, '<br>')}
+                            ${isEdited ? '<span class="edited-badge">Edited</span>' : ''}
+                        </div>
+                        <div class="email-editor" id="email-editor-${index}" style="display: none;">
+                            <textarea class="email-textarea" id="email-textarea-${index}">${emailToShow}</textarea>
+                            <div class="editor-actions">
+                                <button class="btn-save" onclick="saveEmail(${index})">Save</button>
+                                <button class="btn-cancel" onclick="cancelEdit(${index})">Cancel</button>
                             </div>
-                            <div class="followers-small">${formatNumber(data.follower_count)} followers</div>
-                            ${emailAddress ? `<div class="followers-small" style="color: #17a2b8;">📧 ${escapeHtml(emailAddress)}</div>` : ''}
                         </div>
                     </div>
-                </td>
+                </div>
             `;
+            row.appendChild(emailTd);
             
-            let emailHTML = `
-                <td class="email-column">
-                    <div class="email-cell-wrapper">
-                        ${!data.emailFound ? '<div class="no-email-notice">📧 No email found - Use Instagram DM</div>' : ''}
-                        <div class="email-container" id="email-container-${index}">
-                            <div class="email-display ${isEdited ? 'edited' : ''}" id="email-display-${index}" onclick="startEditEmail(${index})">
-                                ${escapeHtml(emailToShow).replace(/\n/g, '<br>')}
-                                ${isEdited ? '<span class="edited-badge">Edited</span>' : ''}
-                            </div>
-                            <div class="email-editor" id="email-editor-${index}" style="display: none;">
-                                <textarea class="email-textarea" id="email-textarea-${index}">${emailToShow}</textarea>
-                                <div class="editor-actions">
-                                    <button class="btn-save" onclick="saveEmail(${index})">Save</button>
-                                    <button class="btn-cancel" onclick="cancelEdit(${index})">Cancel</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </td>
-            `;
-            
+            // Column 3: Actions
+            const actionsTd = document.createElement('td');
             let actionsHTML = `
-                <td>
-                    <div class="action-cell" id="actions-${index}">
-                        <button class="btn-small btn-copy-small" onclick="copyEmail(${index}, this)">
-                            ${data.emailFound ? 'Copy' : 'Copy Message'}
-                        </button>
-                        <button class="btn-small btn-edit-small" onclick="startEditEmail(${index})">
-                            Edit
-                        </button>
-                        <button class="btn-small btn-regenerate-small" onclick="regenerateEmail(${index})" ${data.regenerateCount >= 3 ? 'disabled' : ''}>
-                            Regenerate${data.regenerateCount > 0 ? `<span class="regenerate-count">${data.regenerateCount}x</span>` : ''}
-                        </button>
+                <div class="action-cell" id="actions-${index}">
+                    <button class="btn-small btn-copy-small" onclick="copyEmail(${index}, this)">
+                        ${data.emailFound ? 'Copy' : 'Copy Message'}
+                    </button>
+                    <button class="btn-small btn-edit-small" onclick="startEditEmail(${index})">
+                        Edit
+                    </button>
+                    <button class="btn-small btn-regenerate-small" onclick="regenerateEmail(${index})" ${(data.regenerateCount || 0) >= 3 ? 'disabled' : ''}>
+                        Regenerate${(data.regenerateCount || 0) > 0 ? `<span class="regenerate-count">${data.regenerateCount}x</span>` : ''}
+                    </button>
             `;
             
             if (data.emailFound) {
                 actionsHTML += `
-                        <button class="btn-small btn-approve-small" onclick="approveInfluencer(${index})">
-                            Approve
-                        </button>
+                    <button class="btn-small btn-approve-small" onclick="approveInfluencer(${index})">
+                        Approve
+                    </button>
                 `;
             } else {
                 actionsHTML += `
-                        <button class="btn-small btn-instagram-small" onclick="openInstagram(${index})">
-                            Open Instagram
-                        </button>
+                    <button class="btn-small btn-instagram-small" onclick="openInstagram(${index})">
+                        Open Instagram
+                    </button>
                 `;
             }
             
             actionsHTML += `
-                        <button class="btn-small btn-reject-small" onclick="rejectInfluencer(${index})">
-                            Reject
-                        </button>
-                    </div>
-                </td>
+                    <button class="btn-small btn-reject-small" onclick="rejectInfluencer(${index})">
+                        Reject
+                    </button>
+                </div>
             `;
             
-            // Set the complete HTML
-            row.innerHTML = profileHTML + emailHTML + actionsHTML;
+            actionsTd.innerHTML = actionsHTML;
+            row.appendChild(actionsTd);
         }
 
         // Start editing email
